@@ -13767,7 +13767,7 @@ textarea{resize:vertical;min-height:80px}
     const cartProfit = cart.reduce((s, c) => s + ((c.sku.retail_price || 0) + (c.sku.wh_fee || 0) - (c.sku.cost_price || 0)) * (c.qty || 1), 0);
     async function placeOrder() {
       if (cart.length === 0) return toast("Add products to cart first", "error");
-      const invalid = cart.find((c) => c.qty < 1 || c.qty > c.sku.stock);
+      const invalid = cart.find((c) => parseInt(c.qty) < 1 || parseInt(c.qty) > c.sku.stock);
       if (invalid) return toast(`Check quantity for ${invalid.sku.name} (max: ${invalid.sku.stock})`, "error");
       setBusy(true);
       try {
@@ -13776,58 +13776,73 @@ textarea{resize:vertical;min-height:80px}
         const mm = String(now.getMonth() + 1).padStart(2, "0");
         const prefix = `US${yy}${mm}`;
         const existing = await sbFetch(`/rest/v1/orders?order_number=like.${prefix}*&select=order_number&order=order_number.desc&limit=1`);
-        let lastNum = existing && existing.length > 0 ? parseInt(existing[0].order_number?.slice(-3) || "0") : 0;
-        const firstSkuName = cart[0].sku.name;
+        const lastNum = existing && existing.length > 0 ? parseInt(existing[0].order_number?.slice(-3) || "0") : 0;
+        const order_number = `${prefix}${String(lastNum + 1).padStart(3, "0")}`;
+        const items = cart.map((item) => ({
+          sku_id: item.sku.id,
+          sku_name: item.sku.name,
+          sku_code: item.sku.sku_code,
+          quantity: parseInt(item.qty) || 1,
+          unit_price: item.sku.retail_price,
+          cost_price: item.sku.cost_price,
+          wh_fee: item.sku.wh_fee,
+          notes: item.notes
+        }));
+        let allLabels = [];
         for (const item of cart) {
-          const q = parseInt(item.qty) || 1;
-          const flagged = q > 10;
-          const total = q * ((item.sku.retail_price || 0) + (item.sku.wh_fee || 0));
-          const profit = q * ((item.sku.retail_price || 0) + (item.sku.wh_fee || 0) - (item.sku.cost_price || 0));
-          let labelData = null;
           if (item.labelFiles && item.labelFiles.length > 0) {
             const b64arr = await Promise.all(item.labelFiles.map((f) => new Promise((res) => {
               const r = new FileReader();
               r.onload = (e) => res({ name: f.name, data: e.target.result });
               r.readAsDataURL(f);
             })));
-            labelData = JSON.stringify(b64arr);
+            allLabels = [...allLabels, ...b64arr];
           }
-          lastNum++;
-          const order_number = `${prefix}${String(lastNum).padStart(3, "0")}`;
-          await sbFetch("/rest/v1/orders", { method: "POST", body: JSON.stringify({
-            order_number,
-            dropshipper_id: user.id,
-            dropshipper_name: user.name || user.email,
-            sku_id: item.sku.id,
-            sku_name: item.sku.name,
-            sku_code: item.sku.sku_code,
-            quantity: q,
-            unit_price: item.sku.retail_price,
-            cost_price: item.sku.cost_price,
-            wh_fee: item.sku.wh_fee,
-            total_price: total,
-            profit,
-            status: flagged ? "flagged" : "pending",
-            flag_reason: flagged ? "Quantity exceeds threshold (>10)" : null,
-            notes: item.notes,
-            shipping_label: labelData
-          }) });
+        }
+        const labelData = allLabels.length > 0 ? JSON.stringify(allLabels) : null;
+        const totalQty = items.reduce((s, i) => s + i.quantity, 0);
+        const totalPrice = items.reduce((s, i) => s + ((i.unit_price || 0) + (i.wh_fee || 0)) * i.quantity, 0);
+        const totalCost = items.reduce((s, i) => s + (i.cost_price || 0) * i.quantity, 0);
+        const totalProfit2 = totalPrice - totalCost;
+        const anyFlagged = items.some((i) => i.quantity > 10);
+        const skuSummary = cart.length === 1 ? cart[0].sku.name : `${cart[0].sku.name} +${cart.length - 1} more`;
+        const notesSummary = cart.map((i) => i.notes).filter(Boolean).join(" | ");
+        const [order] = await sbFetch("/rest/v1/orders", { method: "POST", body: JSON.stringify({
+          order_number,
+          dropshipper_id: user.id,
+          dropshipper_name: user.name || user.email,
+          sku_name: skuSummary,
+          sku_code: cart.map((i) => i.sku.sku_code).join(", "),
+          quantity: totalQty,
+          unit_price: totalPrice / Math.max(1, totalQty),
+          cost_price: totalCost / Math.max(1, totalQty),
+          wh_fee: 0,
+          total_price: totalPrice,
+          profit: totalProfit2,
+          status: anyFlagged ? "flagged" : "pending",
+          flag_reason: anyFlagged ? "Item qty >10 requires review" : null,
+          notes: notesSummary,
+          shipping_label: labelData,
+          items: JSON.stringify(items)
+        }) });
+        for (const item of cart) {
+          const q = parseInt(item.qty) || 1;
           await sbFetch(`/rest/v1/skus?id=eq.${item.sku.id}`, { method: "PATCH", body: JSON.stringify({ stock: item.sku.stock - q }) });
-          const due = /* @__PURE__ */ new Date();
-          due.setDate(due.getDate() + 7);
-          await sbFetch("/rest/v1/invoices", { method: "POST", body: JSON.stringify({
-            order_id: null,
-            dropshipper_id: user.id,
-            dropshipper_name: user.name || user.email,
-            amount: total,
-            status: "unpaid",
-            due_date: due.toISOString().split("T")[0],
-            invoice_number: `INV-${Date.now().toString().slice(-8)}`
-          }) });
           setSkus((p) => p.map((s) => s.id === item.sku.id ? { ...s, stock: s.stock - q } : s));
         }
-        setTotalOrders((n) => n + cart.length);
-        setOrderAnim(cart.length === 1 ? cart[0].sku.name : `${cart.length} items`);
+        const due = /* @__PURE__ */ new Date();
+        due.setDate(due.getDate() + 7);
+        await sbFetch("/rest/v1/invoices", { method: "POST", body: JSON.stringify({
+          order_id: order?.id || null,
+          dropshipper_id: user.id,
+          dropshipper_name: user.name || user.email,
+          amount: totalPrice,
+          status: "unpaid",
+          due_date: due.toISOString().split("T")[0],
+          invoice_number: `INV-${Date.now().toString().slice(-8)}`
+        }) });
+        setTotalOrders((n) => n + 1);
+        setOrderAnim(skuSummary);
         setCart([]);
       } catch (e) {
         toast(e.message, "error");
