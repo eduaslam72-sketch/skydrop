@@ -13698,15 +13698,30 @@ textarea{resize:vertical;min-height:80px}
       }
     }
     function downloadLabel(labelData, name, orderId) {
+      const [meta, b64] = labelData.split(",");
+      const mime = meta.match(/:(.*?);/)[1];
+      const bytes = atob(b64);
+      const arr = new Uint8Array(bytes.length);
+      for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+      const blob = new Blob([arr], { type: mime });
+      const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = labelData;
+      a.href = url;
       a.download = name || `label_${orderId?.slice(0, 8)}.pdf`;
       a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1e3);
     }
     function printLabel(labelData) {
       const w = window.open("", "_blank");
       if (labelData.startsWith("data:application/pdf")) {
-        w.document.write(`<iframe src="${labelData}" style="width:100%;height:100vh;border:none"></iframe>`);
+        const [meta, b64] = labelData.split(",");
+        const bytes = atob(b64);
+        const arr = new Uint8Array(bytes.length);
+        for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+        const blob = new Blob([arr], { type: "application/pdf" });
+        const url = URL.createObjectURL(blob);
+        w.location.href = url;
+        setTimeout(() => w.print(), 1e3);
       } else {
         w.document.write(`<html><body style="margin:0"><img src="${labelData}" style="max-width:100%"/></body></html>`);
       }
@@ -13945,6 +13960,14 @@ textarea{resize:vertical;min-height:80px}
     return /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("div", { className: "card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "card-title" }, "\u{1F511} Add New Admin"), /* @__PURE__ */ import_react.default.createElement("p", { style: { fontSize: 13, color: "#6b7280", margin: "0 0 12px" } }, "The person must first register on the platform. Enter their email to grant admin access."), /* @__PURE__ */ import_react.default.createElement("div", { className: "flex gap-2", style: { alignItems: "flex-end" } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "form-group", style: { flex: 1, marginBottom: 0 } }, /* @__PURE__ */ import_react.default.createElement("label", null, "User Email"), /* @__PURE__ */ import_react.default.createElement("input", { value: email, onChange: (e) => setEmail(e.target.value), placeholder: "user@example.com", type: "email" })), /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-primary", onClick: promoteByEmail, disabled: busy }, busy ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("span", { className: "spinner" }), " Adding...") : "+ Grant Admin Access"))), /* @__PURE__ */ import_react.default.createElement("div", { className: "card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "card-title" }, "Current Admins (", users.length, ")"), ld ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "Loading...") : users.length === 0 ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "No admins found") : /* @__PURE__ */ import_react.default.createElement("div", { className: "table-wrap" }, /* @__PURE__ */ import_react.default.createElement("table", null, /* @__PURE__ */ import_react.default.createElement("thead", null, /* @__PURE__ */ import_react.default.createElement("tr", null, /* @__PURE__ */ import_react.default.createElement("th", null, "Name"), /* @__PURE__ */ import_react.default.createElement("th", null, "Email"), /* @__PURE__ */ import_react.default.createElement("th", null, "Joined"), /* @__PURE__ */ import_react.default.createElement("th", null, "Actions"))), /* @__PURE__ */ import_react.default.createElement("tbody", null, users.map((u) => /* @__PURE__ */ import_react.default.createElement("tr", { key: u.id }, /* @__PURE__ */ import_react.default.createElement("td", { style: { fontWeight: 600 } }, u.name || "\u2014"), /* @__PURE__ */ import_react.default.createElement("td", null, u.email), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11 } }, new Date(u.created_at).toLocaleDateString()), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-danger btn-xs", onClick: () => removeAdmin(u.id) }, "Remove Admin")))))))));
   }
   function AdminWarehouseView({ toast }) {
+    function parseLabels(raw) {
+      try {
+        const p = JSON.parse(raw || "[]");
+        return Array.isArray(p) ? p : [];
+      } catch (e) {
+        return raw ? [{ name: "label.pdf", data: raw }] : [];
+      }
+    }
     const [tab, setTab] = (0, import_react.useState)("queue");
     const [queue, setQueue] = (0, import_react.useState)([]);
     const [shipped, setShipped] = (0, import_react.useState)([]);
@@ -13971,10 +13994,21 @@ textarea{resize:vertical;min-height:80px}
     function LabelBtn({ order }) {
       if (!order.shipping_label) return /* @__PURE__ */ import_react.default.createElement("span", { style: { color: "#d97706", fontSize: 11 } }, "\u26A0 No label");
       function dl() {
+        const lbls = parseLabels(order.shipping_label);
+        if (!lbls.length) return;
+        const l = lbls[0];
+        const [meta, b64] = l.data.split(",");
+        const mime = meta.match(/:(.*?);/)[1];
+        const bytes = atob(b64);
+        const arr = new Uint8Array(bytes.length);
+        for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+        const blob = new Blob([arr], { type: mime });
+        const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
-        a.href = order.shipping_label;
-        a.download = `label_${order.id?.slice(0, 8)}.png`;
+        a.href = url;
+        a.download = l.name || "label.pdf";
         a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1e3);
       }
       function pr() {
         const w = window.open("", "_blank");
