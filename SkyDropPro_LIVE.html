@@ -13700,6 +13700,7 @@ textarea{resize:vertical;min-height:80px}
     const [search, setSearch] = (0, import_react.useState)("");
     const [catF, setCatF] = (0, import_react.useState)("");
     const [sel, setSel] = (0, import_react.useState)([]);
+    const [dsTab, setDsTab] = (0, import_react.useState)("dropshippers");
     (0, import_react.useEffect)(() => {
       (async () => {
         try {
@@ -13740,31 +13741,101 @@ textarea{resize:vertical;min-height:80px}
     }
     const cats = [...new Set(skus.map((s) => s.category).filter(Boolean))];
     const fSkus = skus.filter((s) => (!search || s.name?.toLowerCase().includes(search.toLowerCase()) || s.sku_code?.toLowerCase().includes(search.toLowerCase())) && (!catF || s.category === catF));
-    const [dsTab, setDsTab] = (0, import_react.useState)("dropshippers");
-    const tabStyle = (t) => ({
-      padding: "8px 20px", cursor: "pointer", fontSize: 13, fontWeight: 700, border: "none",
-      borderBottom: dsTab === t ? "2px solid #0ea5e9" : "2px solid transparent",
-      background: "transparent", color: dsTab === t ? "#38bdf8" : "#64748b",
-      transition: "color .15s"
-    });
+    const tabBtn = (t, icon, label) => /* @__PURE__ */ import_react.default.createElement("button", {
+      onClick: () => setDsTab(t),
+      style: {
+        padding: "9px 22px", cursor: "pointer", fontSize: 13, fontWeight: 700,
+        border: "none", background: "transparent",
+        borderBottom: dsTab === t ? "2px solid #0ea5e9" : "2px solid transparent",
+        color: dsTab === t ? "#38bdf8" : "#64748b",
+        transition: "color .15s"
+      }
+    }, icon, " ", label);
     return /* @__PURE__ */ import_react.default.createElement("div", null,
-      /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", borderBottom: "1px solid #1e3a5f", marginBottom: 18, gap: 4 } },
-        /* @__PURE__ */ import_react.default.createElement("button", { style: tabStyle("dropshippers"), onClick: () => setDsTab("dropshippers") }, "\u{1F465} Dropshippers"),
-        /* @__PURE__ */ import_react.default.createElement("button", { style: tabStyle("report"), onClick: () => setDsTab("report") }, "\u{1F4C5} Monthly Reports")
+      /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", borderBottom: "1px solid #1e3a5f", marginBottom: 18 } },
+        tabBtn("dropshippers", "\u{1F465}", "Dropshippers"),
+        tabBtn("report", "\u{1F4C5}", "Monthly Reports")
       ),
-      dsTab === "dropshippers" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("div", { className: "card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "card-title" }, "\u{1F465} Dropshipper Management (", users.length, ")"), ld ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "Loading...") : users.length === 0 ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "No dropshippers yet") : /* @__PURE__ */ import_react.default.createElement("div", { className: "table-wrap" }, /* @__PURE__ */ import_react.default.createElement("table", null, /* @__PURE__ */ import_react.default.createElement("thead", null, /* @__PURE__ */ import_react.default.createElement("tr", null, /* @__PURE__ */ import_react.default.createElement("th", null, "Name"), /* @__PURE__ */ import_react.default.createElement("th", null, "Email"), /* @__PURE__ */ import_react.default.createElement("th", null, "Company"), /* @__PURE__ */ import_react.default.createElement("th", null, "Phone"), /* @__PURE__ */ import_react.default.createElement("th", null, "Status"), /* @__PURE__ */ import_react.default.createElement("th", null, "SKUs"), /* @__PURE__ */ import_react.default.createElement("th", null, "Joined"), /* @__PURE__ */ import_react.default.createElement("th", null, "Actions"))), /* @__PURE__ */ import_react.default.createElement("tbody", null, users.map((u) => /* @__PURE__ */ import_react.default.createElement("tr", { key: u.id }, /* @__PURE__ */ import_react.default.createElement("td", null, u.name), /* @__PURE__ */ import_react.default.createElement("td", null, u.email), /* @__PURE__ */ import_react.default.createElement("td", null, u.company || "\u2014"), /* @__PURE__ */ import_react.default.createElement("td", null, u.phone || "\u2014"), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement(Badge, { status: u.status })), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement("span", { className: "badge bg-blue" }, (u.assigned_skus || []).length)), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11 } }, new Date(u.created_at).toLocaleDateString()), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement("div", { className: "flex gap-2", style: { flexWrap: "wrap" } }, u.status === "pending" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-success btn-xs", onClick: () => updateStatus(u.id, "approved") }, "\u2705 Approve"), /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-danger btn-xs", onClick: () => updateStatus(u.id, "rejected") }, "\u274C Reject")), u.status === "approved" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-primary btn-xs", onClick: () => openAssign(u) }, "\u{1F5C3}\uFE0F SKUs"), /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-warning btn-xs", onClick: () => updateStatus(u.id, "inactive") }, "Deactivate")), u.status === "inactive" && /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-success btn-xs", onClick: () => updateStatus(u.id, "approved") }, "Activate"))))))))), assignTarget && /* @__PURE__ */ import_react.default.createElement(
-      Modal,
-      {
-        title: `Assign SKUs \u2014 ${assignTarget.name}`,
-        onClose: () => setAssignTarget(null),
-        footer: /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-outline", onClick: () => setAssignTarget(null) }, "Cancel"), /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-primary", onClick: saveAssign }, "Save (", sel.length, " selected)"))
-      },
-      /* @__PURE__ */ import_react.default.createElement("div", { className: "flex gap-2 mb-3" }, /* @__PURE__ */ import_react.default.createElement("input", { style: { flex: 1 }, placeholder: "Search SKUs...", value: search, onChange: (e) => setSearch(e.target.value) }), /* @__PURE__ */ import_react.default.createElement("select", { style: { width: 140 }, value: catF, onChange: (e) => setCatF(e.target.value) }, /* @__PURE__ */ import_react.default.createElement("option", { value: "" }, "All Categories"), cats.map((c) => /* @__PURE__ */ import_react.default.createElement("option", { key: c }, c)))),
-      /* @__PURE__ */ import_react.default.createElement("div", { className: "flex gap-2 mb-3" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-outline btn-sm", onClick: () => setSel(fSkus.map((s) => s.id)) }, "\u2611 Select All (", fSkus.length, ")"), /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-outline btn-sm", onClick: () => setSel([]) }, "\u2610 Clear All")),
-      /* @__PURE__ */ import_react.default.createElement("div", { style: { maxHeight: 320, overflowY: "auto" } }, fSkus.map((s) => /* @__PURE__ */ import_react.default.createElement("div", { key: s.id, className: "check-item", onClick: () => setSel((p) => p.includes(s.id) ? p.filter((x) => x !== s.id) : [...p, s.id]) }, /* @__PURE__ */ import_react.default.createElement("input", { type: "checkbox", readOnly: true, checked: sel.includes(s.id) }), /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { fontWeight: 500, fontSize: 13 } }, s.name), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 11, color: "#6b7280" } }, s.sku_code, " \u2022 PKR ", (s.retail_price || 0).toLocaleString(), " \u2022 Stock: ", s.stock)), /* @__PURE__ */ import_react.default.createElement("span", { className: `badge ${s.stock > 0 ? "bg-green" : "bg-red"}` }, s.stock > 0 ? "In Stock" : "Out")))),
-      /* @__PURE__ */ import_react.default.createElement("div", { style: { marginTop: 8, fontSize: 12, color: "#6b7280" } }, sel.length, " of ", skus.length, " total SKUs selected")
-    ));
-  }),
+      dsTab === "dropshippers" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null,
+        /* @__PURE__ */ import_react.default.createElement("div", { className: "card" },
+          /* @__PURE__ */ import_react.default.createElement("div", { className: "card-title" }, "\u{1F465} Dropshipper Management (", users.length, ")"),
+          ld
+            ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "Loading...")
+            : users.length === 0
+              ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "No dropshippers yet")
+              : /* @__PURE__ */ import_react.default.createElement("div", { className: "table-wrap" },
+                  /* @__PURE__ */ import_react.default.createElement("table", null,
+                    /* @__PURE__ */ import_react.default.createElement("thead", null,
+                      /* @__PURE__ */ import_react.default.createElement("tr", null,
+                        /* @__PURE__ */ import_react.default.createElement("th", null, "Name"),
+                        /* @__PURE__ */ import_react.default.createElement("th", null, "Email"),
+                        /* @__PURE__ */ import_react.default.createElement("th", null, "Company"),
+                        /* @__PURE__ */ import_react.default.createElement("th", null, "Phone"),
+                        /* @__PURE__ */ import_react.default.createElement("th", null, "Status"),
+                        /* @__PURE__ */ import_react.default.createElement("th", null, "SKUs"),
+                        /* @__PURE__ */ import_react.default.createElement("th", null, "Joined"),
+                        /* @__PURE__ */ import_react.default.createElement("th", null, "Actions")
+                      )
+                    ),
+                    /* @__PURE__ */ import_react.default.createElement("tbody", null,
+                      users.map((u) => /* @__PURE__ */ import_react.default.createElement("tr", { key: u.id },
+                        /* @__PURE__ */ import_react.default.createElement("td", null, u.name),
+                        /* @__PURE__ */ import_react.default.createElement("td", null, u.email),
+                        /* @__PURE__ */ import_react.default.createElement("td", null, u.company || "—"),
+                        /* @__PURE__ */ import_react.default.createElement("td", null, u.phone || "—"),
+                        /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement(Badge, { status: u.status })),
+                        /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement("span", { className: "badge bg-blue" }, (u.assigned_skus || []).length)),
+                        /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11 } }, new Date(u.created_at).toLocaleDateString()),
+                        /* @__PURE__ */ import_react.default.createElement("td", null,
+                          /* @__PURE__ */ import_react.default.createElement("div", { className: "flex gap-2", style: { flexWrap: "wrap" } },
+                            u.status === "pending" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null,
+                              /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-success btn-xs", onClick: () => updateStatus(u.id, "approved") }, "✅ Approve"),
+                              /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-danger btn-xs", onClick: () => updateStatus(u.id, "rejected") }, "❌ Reject")
+                            ),
+                            u.status === "approved" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null,
+                              /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-primary btn-xs", onClick: () => openAssign(u) }, "\u{1F5C3}️ SKUs"),
+                              /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-warning btn-xs", onClick: () => updateStatus(u.id, "inactive") }, "Deactivate")
+                            ),
+                            u.status === "inactive" && /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-success btn-xs", onClick: () => updateStatus(u.id, "approved") }, "Activate")
+                          )
+                        )
+                      ))
+                    )
+                  )
+                )
+        ),
+        assignTarget && /* @__PURE__ */ import_react.default.createElement(Modal, {
+          title: `Assign SKUs — ${assignTarget.name}`,
+          onClose: () => setAssignTarget(null),
+          footer: /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null,
+            /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-outline", onClick: () => setAssignTarget(null) }, "Cancel"),
+            /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-primary", onClick: saveAssign }, "Save (", sel.length, " selected)")
+          )
+        },
+          /* @__PURE__ */ import_react.default.createElement("div", { className: "flex gap-2 mb-3" },
+            /* @__PURE__ */ import_react.default.createElement("input", { style: { flex: 1 }, placeholder: "Search SKUs...", value: search, onChange: (e) => setSearch(e.target.value) }),
+            /* @__PURE__ */ import_react.default.createElement("select", { style: { width: 140 }, value: catF, onChange: (e) => setCatF(e.target.value) },
+              /* @__PURE__ */ import_react.default.createElement("option", { value: "" }, "All Categories"),
+              cats.map((c) => /* @__PURE__ */ import_react.default.createElement("option", { key: c }, c))
+            )
+          ),
+          /* @__PURE__ */ import_react.default.createElement("div", { className: "flex gap-2 mb-3" },
+            /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-outline btn-sm", onClick: () => setSel(fSkus.map((s) => s.id)) }, "☑ Select All (", fSkus.length, ")"),
+            /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-outline btn-sm", onClick: () => setSel([]) }, "☐ Clear All")
+          ),
+          /* @__PURE__ */ import_react.default.createElement("div", { style: { maxHeight: 320, overflowY: "auto" } },
+            fSkus.map((s) => /* @__PURE__ */ import_react.default.createElement("div", { key: s.id, className: "check-item", onClick: () => setSel((p) => p.includes(s.id) ? p.filter((x) => x !== s.id) : [...p, s.id]) },
+              /* @__PURE__ */ import_react.default.createElement("input", { type: "checkbox", readOnly: true, checked: sel.includes(s.id) }),
+              /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1 } },
+                /* @__PURE__ */ import_react.default.createElement("div", { style: { fontWeight: 500, fontSize: 13 } }, s.name),
+                /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 11, color: "#6b7280" } }, s.sku_code, " • PKR ", (s.retail_price || 0).toLocaleString(), " • Stock: ", s.stock)
+              ),
+              /* @__PURE__ */ import_react.default.createElement("span", { className: `badge ${s.stock > 0 ? "bg-green" : "bg-red"}` }, s.stock > 0 ? "In Stock" : "Out")
+            ))
+          ),
+          /* @__PURE__ */ import_react.default.createElement("div", { style: { marginTop: 8, fontSize: 12, color: "#6b7280" } }, sel.length, " of ", skus.length, " total SKUs selected")
+        )
+      ),
       dsTab === "report" && /* @__PURE__ */ import_react.default.createElement(MonthlyReport, { user: { role: "admin" }, toast })
     );
   }
