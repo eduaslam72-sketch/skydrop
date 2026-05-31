@@ -13337,19 +13337,28 @@ textarea{resize:vertical;min-height:80px}
   var NAV = {
     admin: [
       { id: "dashboard", icon: "\u{1F4CA}", label: "Dashboard" },
-      { id: "my_orders", icon: "\u{1F6D2}", label: "My Orders" },
-      { id: "orders", icon: "\u{1F4E6}", label: "All Orders" },
-      { id: "inventory", icon: "\u{1F5C3}\uFE0F", label: "Inventory" },
-      { id: "sku_requests", icon: "\u{1F4CB}", label: "SKU Requests", bkey: "sku_req" },
       { id: "dropshippers", icon: "\u{1F465}", label: "Dropshippers", bkey: "pend_users" },
-      { id: "anomalies", icon: "\u{1F6A9}", label: "Anomalies", bkey: "anomalies" },
-      { id: "payments", icon: "\u{1F4B0}", label: "Payments & P&L" },
       { id: "warehouse_view", icon: "\u{1F3ED}", label: "Warehouse View" },
-      { id: "ds_summary", icon: "\u{1F4BC}", label: "DS Financials" },
       { id: "suppliers", icon: "\u{1F91D}", label: "Suppliers" },
-      { id: "monthly_report", icon: "\u{1F4C5}", label: "Monthly Reports" },
-      { id: "manage_admins", icon: "\u{1F511}", label: "Manage Admins" },
-      { id: "feedback", icon: "\u2B50", label: "Feedback", bkey: "feedback_count" }
+      { id: "feedback", icon: "\u2B50", label: "Feedback", bkey: "feedback_count" },
+      { group: "Orders", icon: "\u{1F6D2}", children: [
+        { id: "my_orders", icon: "\u{1F6D2}", label: "My Orders" },
+        { id: "orders", icon: "\u{1F4E6}", label: "All Orders" },
+        { id: "dashboard", icon: "\u{1F6D2}", label: "Sky Cart", altPage: "dashboard" }
+      ]},
+      { group: "Inventory", icon: "\u{1F5C3}\uFE0F", children: [
+        { id: "inventory", icon: "\u{1F5C3}\uFE0F", label: "Inventory" },
+        { id: "sku_requests", icon: "\u{1F4CB}", label: "SKU Requests", bkey: "sku_req" }
+      ]},
+      { group: "Finances", icon: "\u{1F4B0}", children: [
+        { id: "payments", icon: "\u{1F4B0}", label: "Payments & P\&L" },
+        { id: "ds_summary", icon: "\u{1F4BC}", label: "DS Financials" }
+      ]},
+      { group: "Management", icon: "\u{1F511}", children: [
+        { id: "manage_admins", icon: "\u{1F511}", label: "Manage Admins" },
+        { id: "monthly_report", icon: "\u{1F4C5}", label: "Monthly Reports" },
+        { id: "anomalies", icon: "\u{1F6A9}", label: "Anomalies", bkey: "anomalies" }
+      ]}
     ],
     dropshipper: [
       { id: "dashboard", icon: "\u{1F3E0}", label: "New Order" },
@@ -13374,7 +13383,80 @@ textarea{resize:vertical;min-height:80px}
   };
   function Sidebar({ user, page, setPage, badges, onLogout }) {
     const items = NAV[user.role] || [];
-    return /* @__PURE__ */ import_react.default.createElement("div", { className: "sidebar" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "sidebar-logo", style: { display: "flex", alignItems: "center", padding: "14px 16px" } }, /* @__PURE__ */ import_react.default.createElement("svg", { width: "36", height: "56", viewBox: "0 0 66 76", style: { display: "inline-block", verticalAlign: "middle", marginRight: 10 } }, /* @__PURE__ */ import_react.default.createElement("polygon", { points: "33,2 61,22 33,70 5,22", fill: "#0c4a6e" }), /* @__PURE__ */ import_react.default.createElement("polygon", { points: "33,10 55,24 33,60 11,24", fill: "#0369a1" }), /* @__PURE__ */ import_react.default.createElement("polygon", { points: "33,18 47,26 33,50 19,26", fill: "#0ea5e9" }), /* @__PURE__ */ import_react.default.createElement("text", { x: "33", y: "32", fontFamily: "'Segoe UI',sans-serif", fontSize: "16", fontWeight: "900", fill: "#fff", textAnchor: "middle" }, "S")), /* @__PURE__ */ import_react.default.createElement("span", null, "Sky", /* @__PURE__ */ import_react.default.createElement("span", { style: { color: "#38bdf8" } }, "Drop"), " ", /* @__PURE__ */ import_react.default.createElement("span", { style: { fontWeight: 300, fontSize: 14 } }, "Pro"))), /* @__PURE__ */ import_react.default.createElement("div", { className: "sidebar-role" }, user.role), /* @__PURE__ */ import_react.default.createElement("div", { className: "sidebar-nav" }, items.map((it) => /* @__PURE__ */ import_react.default.createElement("div", { key: it.id, className: `nav-item${page === it.id ? " active" : ""}`, onClick: () => setPage(it.id) }, /* @__PURE__ */ import_react.default.createElement("span", null, it.icon), /* @__PURE__ */ import_react.default.createElement("span", { style: { flex: 1 } }, it.label), it.bkey && badges[it.bkey] > 0 && /* @__PURE__ */ import_react.default.createElement("span", { className: "nav-badge" }, badges[it.bkey])))), /* @__PURE__ */ import_react.default.createElement("div", { className: "sidebar-footer" }, /* @__PURE__ */ import_react.default.createElement("div", { style: { marginBottom: 4, fontWeight: 600, color: "#fff" } }, user.name || user.email), /* @__PURE__ */ import_react.default.createElement("div", { style: { marginBottom: 8, fontSize: 11 } }, user.email), /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-outline btn-sm", onClick: onLogout }, "Sign Out")));
+    const [openGroups, setOpenGroups] = (0, import_react.useState)(() => {
+      const initial = {};
+      items.forEach((it) => { if (it.group) { const active = it.children && it.children.some((c) => c.id === page); initial[it.group] = active; } });
+      return initial;
+    });
+    function toggleGroup(g) { setOpenGroups((p) => ({ ...p, [g]: !p[g] })); }
+    function groupHasBadge(it) { return it.children && it.children.some((c) => c.bkey && badges[c.bkey] > 0); }
+    function groupBadgeTotal(it) { return it.children ? it.children.reduce((s, c) => s + (c.bkey && badges[c.bkey] > 0 ? badges[c.bkey] : 0), 0) : 0; }
+    const logoSvg = /* @__PURE__ */ import_react.default.createElement("svg", { width: "36", height: "56", viewBox: "0 0 66 76", style: { display: "inline-block", verticalAlign: "middle", marginRight: 10 } },
+      /* @__PURE__ */ import_react.default.createElement("polygon", { points: "33,2 61,22 33,70 5,22", fill: "#0c4a6e" }),
+      /* @__PURE__ */ import_react.default.createElement("polygon", { points: "33,10 55,24 33,60 11,24", fill: "#0369a1" }),
+      /* @__PURE__ */ import_react.default.createElement("polygon", { points: "33,18 47,26 33,50 19,26", fill: "#0ea5e9" }),
+      /* @__PURE__ */ import_react.default.createElement("text", { x: "33", y: "32", fontFamily: "'Segoe UI',sans-serif", fontSize: "16", fontWeight: "900", fill: "#fff", textAnchor: "middle" }, "S")
+    );
+    return /* @__PURE__ */ import_react.default.createElement("div", { className: "sidebar" },
+      /* @__PURE__ */ import_react.default.createElement("div", { className: "sidebar-logo", style: { display: "flex", alignItems: "center", padding: "14px 16px" } },
+        logoSvg,
+        /* @__PURE__ */ import_react.default.createElement("span", null, "Sky", /* @__PURE__ */ import_react.default.createElement("span", { style: { color: "#38bdf8" } }, "Drop"), " ", /* @__PURE__ */ import_react.default.createElement("span", { style: { fontWeight: 300, fontSize: 14 } }, "Pro"))
+      ),
+      /* @__PURE__ */ import_react.default.createElement("div", { className: "sidebar-role" }, user.role),
+      /* @__PURE__ */ import_react.default.createElement("div", { className: "sidebar-nav" },
+        items.map((it, idx) => {
+          if (it.group) {
+            const isOpen = !!openGroups[it.group];
+            const groupActive = it.children && it.children.some((c) => c.id === page);
+            const badgeTotal = groupBadgeTotal(it);
+            return /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, { key: it.group },
+              /* @__PURE__ */ import_react.default.createElement("div", {
+                onClick: () => toggleGroup(it.group),
+                style: {
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "9px 14px", cursor: "pointer", userSelect: "none",
+                  background: groupActive && !isOpen ? "rgba(14,165,233,.13)" : "transparent",
+                  borderLeft: groupActive && !isOpen ? "3px solid #0ea5e9" : "3px solid transparent",
+                  borderRadius: 6, margin: "1px 6px",
+                  transition: "background .15s"
+                }
+              },
+                /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 16 } }, it.icon),
+                /* @__PURE__ */ import_react.default.createElement("span", { style: { flex: 1, fontSize: 13, fontWeight: 700, color: groupActive && !isOpen ? "#38bdf8" : "#94a3b8", letterSpacing: 0.2 } }, it.group),
+                badgeTotal > 0 && !isOpen && /* @__PURE__ */ import_react.default.createElement("span", { className: "nav-badge" }, badgeTotal),
+                /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 10, color: "#475569", transition: "transform .2s", display: "inline-block", transform: isOpen ? "rotate(90deg)" : "rotate(0deg)" } }, "▶")
+              ),
+              isOpen && /* @__PURE__ */ import_react.default.createElement("div", { style: { marginLeft: 12, borderLeft: "2px solid #1e3a5f", paddingLeft: 4, marginBottom: 4 } },
+                it.children.map((child) => /* @__PURE__ */ import_react.default.createElement("div", {
+                  key: child.id + (child.label || ""),
+                  className: `nav-item${page === child.id ? " active" : ""}`,
+                  onClick: () => setPage(child.id),
+                  style: { padding: "7px 12px", fontSize: 12, margin: "1px 4px" }
+                },
+                  /* @__PURE__ */ import_react.default.createElement("span", null, child.icon),
+                  /* @__PURE__ */ import_react.default.createElement("span", { style: { flex: 1 } }, child.label),
+                  child.bkey && badges[child.bkey] > 0 && /* @__PURE__ */ import_react.default.createElement("span", { className: "nav-badge" }, badges[child.bkey])
+                ))
+              )
+            );
+          }
+          return /* @__PURE__ */ import_react.default.createElement("div", {
+            key: it.id,
+            className: `nav-item${page === it.id ? " active" : ""}`,
+            onClick: () => setPage(it.id)
+          },
+            /* @__PURE__ */ import_react.default.createElement("span", null, it.icon),
+            /* @__PURE__ */ import_react.default.createElement("span", { style: { flex: 1 } }, it.label),
+            it.bkey && badges[it.bkey] > 0 && /* @__PURE__ */ import_react.default.createElement("span", { className: "nav-badge" }, badges[it.bkey])
+          );
+        })
+      ),
+      /* @__PURE__ */ import_react.default.createElement("div", { className: "sidebar-footer" },
+        /* @__PURE__ */ import_react.default.createElement("div", { style: { marginBottom: 4, fontWeight: 600, color: "#fff" } }, user.name || user.email),
+        /* @__PURE__ */ import_react.default.createElement("div", { style: { marginBottom: 8, fontSize: 11 } }, user.email),
+        /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-outline btn-sm", onClick: onLogout }, "Sign Out")
+      )
+    );
   }
   function AdminDashboard({ toast }) {
     const [stats, setStats] = (0, import_react.useState)({ orders: 0, revenue: 0, profit: 0, dropshippers: 0, skus: 0, pending: 0 });
