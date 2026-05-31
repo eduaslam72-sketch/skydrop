@@ -12946,6 +12946,93 @@ textarea{resize:vertical;min-height:80px}
   function Toasts({ list }) {
     return /* @__PURE__ */ import_react.default.createElement("div", { className: "toast-wrap" }, list.map((t) => /* @__PURE__ */ import_react.default.createElement("div", { key: t.id, className: `toast toast-${t.type}` }, t.msg)));
   }
+  function OrderSuccessAnimation({ skuName, onDone }) {
+    const [phase, setPhase] = (0, import_react.useState)(0);
+    (0, import_react.useEffect)(() => {
+      const t1 = setTimeout(() => setPhase(1), 200);
+      const t2 = setTimeout(() => setPhase(2), 2400);
+      const t3 = setTimeout(() => setPhase(3), 3200);
+      const t4 = setTimeout(() => onDone(), 6500);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+        clearTimeout(t4);
+      };
+    }, []);
+    const confetti = Array.from({ length: 60 }, (_, i) => ({
+      id: i,
+      x: 10 + Math.random() * 80,
+      delay: Math.random() * 1.2,
+      dur: 1.2 + Math.random() * 1.4,
+      size: 4 + Math.random() * 8,
+      color: ["#38bdf8", "#0ea5e9", "#34d399", "#fbbf24", "#f87171", "#a78bfa", "#fb923c", "#e2e8f0"][Math.floor(Math.random() * 8)],
+      rot: Math.random() * 360,
+      shape: Math.random() > 0.5 ? "circle" : "rect"
+    }));
+    const fireworks = phase >= 2 ? Array.from({ length: 8 }, (_, i) => ({
+      id: i,
+      cx: 20 + Math.random() * 60,
+      cy: 10 + Math.random() * 40,
+      color: ["#38bdf8", "#fbbf24", "#34d399", "#f87171", "#a78bfa"][i % 5],
+      delay: Math.random() * 0.6
+    })) : [];
+    return /* @__PURE__ */ import_react.default.createElement("div", { onClick: onDone, style: { position: "fixed", inset: 0, background: "rgba(5,15,30,.92)", zIndex: 99999, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", overflow: "hidden" } }, /* @__PURE__ */ import_react.default.createElement("style", null, `
+        @keyframes confetti-fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+        @keyframes truck-move{0%{transform:translateX(-120px)}60%{transform:translateX(calc(50vw - 60px))}100%{transform:translateX(calc(50vw - 60px))}}
+        @keyframes pkg-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+        @keyframes burst{0%{transform:scale(0);opacity:1}100%{transform:scale(2.5);opacity:0}}
+        @keyframes spark{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0}}
+        @keyframes success-pop{0%{transform:scale(0) rotate(-10deg);opacity:0}70%{transform:scale(1.1) rotate(2deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+        @keyframes tip-slide{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+        @keyframes pulse-glow{0%,100%{box-shadow:0 0 20px rgba(56,189,248,.3)}50%{box-shadow:0 0 40px rgba(56,189,248,.7)}}
+        @keyframes road-dash{to{stroke-dashoffset:-20}}
+        @keyframes firework-burst{0%{transform:scale(0);opacity:1}100%{transform:scale(3);opacity:0}}
+      `), phase >= 1 && confetti.map((c) => /* @__PURE__ */ import_react.default.createElement("div", { key: c.id, style: {
+      position: "absolute",
+      top: "-20px",
+      left: c.x + "%",
+      width: c.size,
+      height: c.size,
+      borderRadius: c.shape === "circle" ? "50%" : "2px",
+      background: c.color,
+      animation: `confetti-fall ${c.dur}s ${c.delay}s ease-in forwards`,
+      transform: `rotate(${c.rot}deg)`,
+      zIndex: 1
+    } })), fireworks.map((fw) => /* @__PURE__ */ import_react.default.createElement("div", { key: fw.id, style: {
+      position: "absolute",
+      left: fw.cx + "%",
+      top: fw.cy + "%",
+      width: 60,
+      height: 60,
+      borderRadius: "50%",
+      border: `3px solid ${fw.color}`,
+      animation: `firework-burst .8s ${fw.delay}s ease-out forwards`,
+      opacity: 0,
+      zIndex: 2
+    } })), /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "relative", width: "100%", maxWidth: 600, padding: "0 20px", zIndex: 10 } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { textAlign: "center", marginBottom: 20, animation: "tip-slide .5s ease forwards", opacity: 0 } }, /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 13, color: "#38bdf8", letterSpacing: 2, textTransform: "uppercase", fontWeight: 600 } }, "Order Confirmed")), /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "relative", height: 100, marginBottom: 16 } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "absolute", bottom: 20, left: 0, right: 0, height: 8, background: "#1e293b", borderRadius: 4 } }), /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "absolute", bottom: 23, left: "10%", right: "10%", height: 2, background: "repeating-linear-gradient(90deg,#38bdf8 0,#38bdf8 20px,transparent 20px,transparent 40px)", opacity: 0.4 } }), /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "absolute", left: 10, bottom: 28, textAlign: "center" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 36 } }, "\u{1F3ED}"), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 9, color: "#64748b", marginTop: 2 } }, "Warehouse")), /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "absolute", right: 10, bottom: 28, textAlign: "center", opacity: phase >= 2 ? 1 : 0.2, transition: "opacity .5s" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 36 } }, "\u{1F3E0}"), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 9, color: phase >= 2 ? "#34d399" : "#64748b", marginTop: 2, transition: "color .5s" } }, "Customer")), phase >= 1 && /* @__PURE__ */ import_react.default.createElement("div", { style: {
+      position: "absolute",
+      bottom: 26,
+      left: 80,
+      animation: `truck-move 2s cubic-bezier(.4,0,.2,1) forwards`,
+      fontSize: 32,
+      filter: phase >= 2 ? "drop-shadow(0 0 8px #34d399)" : "none",
+      transition: "filter .3s"
+    } }, "\u{1F69A}", /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "absolute", top: -14, right: -4, fontSize: 16, animation: "pkg-bounce 0.6s ease-in-out infinite" } }, "\u{1F4E6}"))), phase >= 2 && /* @__PURE__ */ import_react.default.createElement("div", { style: {
+      textAlign: "center",
+      animation: "success-pop .5s cubic-bezier(.175,.885,.32,1.275) forwards",
+      opacity: 0,
+      marginBottom: 16
+    } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 48, marginBottom: 8 } }, "\u2705"), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 22, fontWeight: 800, color: "#e2e8f0", marginBottom: 4 } }, "Order Placed!"), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 14, color: "#38bdf8", fontWeight: 600 } }, skuName), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 12, color: "#64748b", marginTop: 4 } }, "Your warehouse team has been notified")), phase >= 3 && /* @__PURE__ */ import_react.default.createElement("div", { style: {
+      background: "linear-gradient(135deg,#0c2d4a,#0f172a)",
+      border: "1px solid #0ea5e9",
+      borderRadius: 12,
+      padding: "14px 18px",
+      animation: "tip-slide .5s ease forwards",
+      opacity: 0,
+      animationDelay: ".1s"
+    } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 10, alignItems: "flex-start" } }, /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 22, flexShrink: 0 } }, "\u{1F4A1}"), /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 12, fontWeight: 700, color: "#fbbf24", marginBottom: 4, textTransform: "uppercase", letterSpacing: 1 } }, "Pro Selling Tip"), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 13, color: "#94a3b8", lineHeight: 1.6 } }, "Message your buyer: ", /* @__PURE__ */ import_react.default.createElement("span", { style: { color: "#e2e8f0", fontStyle: "italic" } }, `"Great news! Your order is confirmed and will be packed & shipped within 24 hours. We'll send tracking details soon. Thank you for your trust! \u{1F680}"`))))), /* @__PURE__ */ import_react.default.createElement("div", { style: { textAlign: "center", marginTop: 16, fontSize: 11, color: "#334155" } }, "Tap anywhere to continue")));
+  }
   function WelcomeModal({ user, onClose }) {
     const roleGuides = {
       admin: [
@@ -13457,6 +13544,7 @@ textarea{resize:vertical;min-height:80px}
     const [recent, setRecent] = (0, import_react.useState)([]);
     const [search, setSearch] = (0, import_react.useState)("");
     const [labelFiles, setLabelFiles] = (0, import_react.useState)([]);
+    const [orderAnim, setOrderAnim] = (0, import_react.useState)(null);
     (0, import_react.useEffect)(() => {
       (async () => {
         try {
@@ -13532,7 +13620,8 @@ textarea{resize:vertical;min-height:80px}
           due_date: due.toISOString().split("T")[0],
           invoice_number: `INV-${Date.now().toString().slice(-8)}`
         }) });
-        toast(flagged ? "\u26A0\uFE0F Order flagged for review (qty>10)" : "\u2705 Order placed!", flagged ? "info" : "success");
+        if (!flagged) setOrderAnim(sel.name);
+        else toast("\u26A0\uFE0F Order flagged for review (qty>10)", "info");
         setSel(null);
         setQty(1);
         setNotes("");
@@ -13544,6 +13633,7 @@ textarea{resize:vertical;min-height:80px}
       }
       setBusy(false);
     }
+    if (orderAnim) return /* @__PURE__ */ import_react.default.createElement(OrderSuccessAnimation, { skuName: orderAnim, onDone: () => setOrderAnim(null) });
     const filtered = skus.filter(
       (s) => !search || s.name.toLowerCase().includes(search.toLowerCase()) || (s.sku_code || "").toLowerCase().includes(search.toLowerCase())
     );
