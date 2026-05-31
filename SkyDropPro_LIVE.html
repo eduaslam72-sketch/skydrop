@@ -13697,13 +13697,23 @@ textarea{resize:vertical;min-height:80px}
   }
   function AdminPayments({ toast }) {
     const [inv, setInv] = (0, import_react.useState)([]);
+    const [profiles, setProfiles] = (0, import_react.useState)([]);
     const [ld, setLd] = (0, import_react.useState)(true);
+    const [previewDs, setPreviewDs] = (0, import_react.useState)(null);
     const [previewImg, setPreviewImg] = (0, import_react.useState)(null);
-    const [previewMeta, setPreviewMeta] = (0, import_react.useState)(null);
     (0, import_react.useEffect)(() => {
       (async () => {
         try {
-          setInv(await sbFetch("/rest/v1/invoices?select=*&order=created_at.desc"));
+          const [invData, profData] = await Promise.all([
+            sbFetch("/rest/v1/invoices?select=*&order=created_at.desc"),
+            sbFetch("/rest/v1/profiles?role=eq.dropshipper&select=id,name,email,payment_screenshots&order=name.asc")
+          ]);
+          setInv(invData);
+          setProfiles(profData.map((p) => {
+            let shots = [];
+            try { shots = JSON.parse(p.payment_screenshots || "[]"); } catch(e) {}
+            return { ...p, shots };
+          }));
         } catch (e) {
           toast(e.message, "error");
         }
@@ -13721,28 +13731,63 @@ textarea{resize:vertical;min-height:80px}
     }
     const total = inv.reduce((s, i) => s + (i.amount || 0), 0);
     const paid = inv.filter((i) => i.status === "paid").reduce((s, i) => s + (i.amount || 0), 0);
-    const pendingProof = inv.filter((i) => i.payment_screenshot && i.status !== "paid").length;
+    const proofCount = profiles.filter((p) => p.shots.length > 0).length;
     return /* @__PURE__ */ import_react.default.createElement("div", null,
-      previewImg && /* @__PURE__ */ import_react.default.createElement("div", { onClick: () => { setPreviewImg(null); setPreviewMeta(null); }, style: { position: "fixed", inset: 0, background: "rgba(0,0,0,.88)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", cursor: "zoom-out", flexDirection: "column", gap: 12 } },
-        /* @__PURE__ */ import_react.default.createElement("div", { style: { background: "#1e293b", borderRadius: 10, padding: "10px 18px", color: "#e2e8f0", fontSize: 13, display: "flex", gap: 16, alignItems: "center" } },
-          previewMeta && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null,
-            /* @__PURE__ */ import_react.default.createElement("span", null, "\u{1F4CB} Invoice: ", /* @__PURE__ */ import_react.default.createElement("strong", null, previewMeta.invoice_number)),
-            /* @__PURE__ */ import_react.default.createElement("span", null, "\u{1F464} ", previewMeta.dropshipper_name || "—"),
-            /* @__PURE__ */ import_react.default.createElement("span", null, "\u{1F4B0} PKR ", (previewMeta.amount || 0).toLocaleString()),
-            previewMeta.screenshot_uploaded_at && /* @__PURE__ */ import_react.default.createElement("span", { style: { color: "#94a3b8", fontSize: 11 } }, "Uploaded: ", new Date(previewMeta.screenshot_uploaded_at).toLocaleString())
+      previewDs && /* @__PURE__ */ import_react.default.createElement("div", { onClick: () => { setPreviewDs(null); setPreviewImg(null); }, style: { position: "fixed", inset: 0, background: "rgba(0,0,0,.9)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 14 } },
+        /* @__PURE__ */ import_react.default.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#1e293b", borderRadius: 14, padding: "20px 24px", maxWidth: 700, width: "95vw", maxHeight: "90vh", overflowY: "auto" } },
+          /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 } },
+            /* @__PURE__ */ import_react.default.createElement("div", null,
+              /* @__PURE__ */ import_react.default.createElement("div", { style: { fontWeight: 700, fontSize: 15, color: "#e2e8f0" } }, "\u{1F4F8} Payment Screenshots — ", previewDs.name || previewDs.email),
+              /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 12, color: "#64748b" } }, previewDs.shots.length, " screenshot(s) uploaded")
+            ),
+            /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => { setPreviewDs(null); setPreviewImg(null); }, style: { background: "none", border: "none", color: "#f87171", fontSize: 26, cursor: "pointer", fontWeight: 700, lineHeight: 1 } }, "×")
           ),
-          /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => { setPreviewImg(null); setPreviewMeta(null); }, style: { marginLeft: "auto", background: "none", border: "none", color: "#f87171", fontSize: 22, cursor: "pointer", fontWeight: 700, lineHeight: 1 } }, "×")
-        ),
-        /* @__PURE__ */ import_react.default.createElement("img", { src: previewImg, style: { maxWidth: "88vw", maxHeight: "78vh", borderRadius: 10, boxShadow: "0 8px 40px rgba(0,0,0,.7)" }, onClick: (e) => e.stopPropagation() }),
-        previewMeta && previewMeta.status !== "paid" && /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-success", onClick: (e) => { e.stopPropagation(); markPaid(previewMeta.id); setPreviewImg(null); setPreviewMeta(null); }, style: { fontSize: 14, padding: "10px 24px" } }, "✅ Mark as Paid")
+          previewImg
+            ? /* @__PURE__ */ import_react.default.createElement("div", null,
+                /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => setPreviewImg(null), style: { background: "none", border: "none", color: "#38bdf8", cursor: "pointer", fontSize: 13, marginBottom: 10, padding: 0 } }, "← Back to thumbnails"),
+                /* @__PURE__ */ import_react.default.createElement("img", { src: previewImg, style: { width: "100%", borderRadius: 10, maxHeight: "60vh", objectFit: "contain" } })
+              )
+            : /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 12, flexWrap: "wrap" } },
+                previewDs.shots.map((s, idx) => /* @__PURE__ */ import_react.default.createElement("div", { key: idx, style: { width: 140, borderRadius: 8, overflow: "hidden", border: "2px solid #334155", cursor: "pointer" }, onClick: () => setPreviewImg(s.data) },
+                  /* @__PURE__ */ import_react.default.createElement("img", { src: s.data, style: { width: "100%", height: 110, objectFit: "cover" } }),
+                  /* @__PURE__ */ import_react.default.createElement("div", { style: { padding: "4px 6px", background: "#0f172a", fontSize: 10, color: "#94a3b8", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" } }, s.name),
+                  s.uploaded_at && /* @__PURE__ */ import_react.default.createElement("div", { style: { padding: "0 6px 4px", fontSize: 9, color: "#475569" } }, new Date(s.uploaded_at).toLocaleString())
+                ))
+              ),
+          /* @__PURE__ */ import_react.default.createElement("div", { style: { marginTop: 16, borderTop: "1px solid #334155", paddingTop: 14 } },
+            /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 12, color: "#94a3b8", marginBottom: 8 } }, "Mark unpaid invoices for this dropshipper as paid:"),
+            /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
+              inv.filter((i) => i.dropshipper_id === previewDs.id && i.status !== "paid").map((i) => /* @__PURE__ */ import_react.default.createElement("button", { key: i.id, className: "btn btn-success btn-xs", onClick: () => markPaid(i.id) }, "✅ Mark ", i.invoice_number, " Paid"))
+            ),
+            inv.filter((i) => i.dropshipper_id === previewDs.id && i.status !== "paid").length === 0 && /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 12, color: "#059669" } }, "✓ All invoices for this dropshipper are paid")
+          )
+        )
       ),
       /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-grid" },
         /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-label" }, "Total Invoiced"), /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-value" }, "PKR ", total.toLocaleString())),
         /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-label" }, "Collected"), /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-value", style: { color: "#059669" } }, "PKR ", paid.toLocaleString())),
         /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-label" }, "Outstanding"), /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-value", style: { color: "#dc2626" } }, "PKR ", (total - paid).toLocaleString())),
-        pendingProof > 0 && /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-card", style: { border: "1px solid #f59e0b", background: "rgba(251,191,36,.08)" } },
-          /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-label", style: { color: "#f59e0b" } }, "\u{1F4F8} Proofs Awaiting Review"),
-          /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-value", style: { color: "#f59e0b" } }, pendingProof)
+        proofCount > 0 && /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-card", style: { border: "1px solid #f59e0b", background: "rgba(251,191,36,.08)" } },
+          /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-label", style: { color: "#f59e0b" } }, "\u{1F4F8} Dropshippers w/ Proof"),
+          /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-value", style: { color: "#f59e0b" } }, proofCount)
+        )
+      ),
+      proofCount > 0 && /* @__PURE__ */ import_react.default.createElement("div", { className: "card", style: { marginBottom: 0 } },
+        /* @__PURE__ */ import_react.default.createElement("div", { className: "card-title" }, "\u{1F4F8} Payment Screenshots Submitted"),
+        /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } },
+          profiles.filter((p) => p.shots.length > 0).map((p) => {
+            const unpaidAmt = inv.filter((i) => i.dropshipper_id === p.id && i.status !== "paid").reduce((s, i) => s + (i.amount || 0), 0);
+            return /* @__PURE__ */ import_react.default.createElement("div", { key: p.id, style: { background: "#0f172a", border: "1px solid #0284c7", borderRadius: 10, padding: "12px 16px", minWidth: 200, cursor: "pointer" }, onClick: () => { setPreviewDs(p); setPreviewImg(null); } },
+              /* @__PURE__ */ import_react.default.createElement("div", { style: { fontWeight: 700, fontSize: 13, color: "#e2e8f0", marginBottom: 4 } }, p.name || p.email),
+              /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 11, color: "#64748b", marginBottom: 8 } }, p.shots.length, " screenshot(s)"),
+              unpaidAmt > 0 && /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 11, color: "#fbbf24", marginBottom: 8 } }, "Pending: PKR ", unpaidAmt.toLocaleString()),
+              /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 6 } },
+                p.shots.slice(0, 3).map((s, idx) => /* @__PURE__ */ import_react.default.createElement("img", { key: idx, src: s.data, style: { width: 44, height: 44, objectFit: "cover", borderRadius: 6, border: "1px solid #334155" } })),
+                p.shots.length > 3 && /* @__PURE__ */ import_react.default.createElement("div", { style: { width: 44, height: 44, borderRadius: 6, background: "#1e293b", border: "1px solid #334155", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#94a3b8" } }, "+", p.shots.length - 3)
+              ),
+              /* @__PURE__ */ import_react.default.createElement("div", { style: { marginTop: 10, background: "#0284c7", color: "#fff", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 700, textAlign: "center" } }, "\u{1F441}️ View & Verify")
+            );
+          })
         )
       ),
       /* @__PURE__ */ import_react.default.createElement("div", { className: "card" },
@@ -13758,12 +13803,11 @@ textarea{resize:vertical;min-height:80px}
                 /* @__PURE__ */ import_react.default.createElement("th", null, "Amount"),
                 /* @__PURE__ */ import_react.default.createElement("th", null, "Due"),
                 /* @__PURE__ */ import_react.default.createElement("th", null, "Status"),
-                /* @__PURE__ */ import_react.default.createElement("th", null, "\u{1F4F8} Payment Proof"),
                 /* @__PURE__ */ import_react.default.createElement("th", null, "Actions")
               )
             ),
             /* @__PURE__ */ import_react.default.createElement("tbody", null,
-              inv.map((i) => /* @__PURE__ */ import_react.default.createElement("tr", { key: i.id, style: i.payment_screenshot && i.status !== "paid" ? { background: "rgba(251,191,36,.06)" } : {} },
+              inv.map((i) => /* @__PURE__ */ import_react.default.createElement("tr", { key: i.id },
                 /* @__PURE__ */ import_react.default.createElement("td", { style: { fontFamily: "monospace" } }, i.invoice_number),
                 /* @__PURE__ */ import_react.default.createElement("td", null, i.dropshipper_name),
                 /* @__PURE__ */ import_react.default.createElement("td", { style: { fontWeight: 600 } }, "PKR ", (i.amount || 0).toLocaleString()),
@@ -13771,14 +13815,6 @@ textarea{resize:vertical;min-height:80px}
                   i.due_date ? new Date(i.due_date).toLocaleDateString() : "—"
                 ),
                 /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement(Badge, { status: i.status || "unpaid" })),
-                /* @__PURE__ */ import_react.default.createElement("td", null,
-                  i.payment_screenshot
-                    ? /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 3 } },
-                        /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-xs", style: { background: "#0284c7", color: "#fff", border: "none" }, onClick: () => { setPreviewImg(i.payment_screenshot); setPreviewMeta(i); } }, "\u{1F5BC}️ View Proof"),
-                        i.screenshot_uploaded_at && /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 10, color: "#64748b" } }, new Date(i.screenshot_uploaded_at).toLocaleDateString())
-                      )
-                    : /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 11, color: "#6b7280" } }, "—")
-                ),
                 /* @__PURE__ */ import_react.default.createElement("td", null,
                   i.status !== "paid" && /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-success btn-xs", onClick: () => markPaid(i.id) }, "Mark Paid")
                 )
@@ -14048,12 +14084,17 @@ textarea{resize:vertical;min-height:80px}
   function DropshipperInvoices({ user, toast }) {
     const [inv, setInv] = (0, import_react.useState)([]);
     const [ld, setLd] = (0, import_react.useState)(true);
-    const [uploading, setUploading] = (0, import_react.useState)({});
+    const [uploading, setUploading] = (0, import_react.useState)(false);
+    const [screenshots, setScreenshots] = (0, import_react.useState)([]);
     const [previewImg, setPreviewImg] = (0, import_react.useState)(null);
     (0, import_react.useEffect)(() => {
       (async () => {
         try {
           setInv(await sbFetch(`/rest/v1/invoices?dropshipper_id=eq.${user.id}&select=*&order=created_at.desc`));
+          const [prof] = await sbFetch(`/rest/v1/profiles?id=eq.${user.id}&select=payment_screenshots`);
+          if (prof && prof.payment_screenshots) {
+            try { setScreenshots(JSON.parse(prof.payment_screenshots)); } catch(e) {}
+          }
         } catch (e) {
           toast(e.message, "error");
         }
@@ -14062,34 +14103,69 @@ textarea{resize:vertical;min-height:80px}
     }, []);
     const total = inv.reduce((s, i) => s + (i.amount || 0), 0);
     const unpaid = inv.filter((i) => i.status !== "paid").reduce((s, i) => s + (i.amount || 0), 0);
-    async function uploadScreenshot(invoiceId, file) {
-      setUploading((p) => ({ ...p, [invoiceId]: true }));
+    async function uploadScreenshots(files) {
+      if (!files || files.length === 0) return;
+      const remaining = 5 - screenshots.length;
+      if (remaining <= 0) return toast("Maximum 5 screenshots already uploaded. Remove one first.", "error");
+      setUploading(true);
       try {
-        const b64 = await new Promise((res) => { const r = new FileReader(); r.onload = (e) => res(e.target.result); r.readAsDataURL(file); });
-        await sbFetch(`/rest/v1/invoices?id=eq.${invoiceId}`, { method: "PATCH", body: JSON.stringify({ payment_screenshot: b64, screenshot_name: file.name, screenshot_uploaded_at: new Date().toISOString() }) });
-        setInv((p) => p.map((i) => i.id === invoiceId ? { ...i, payment_screenshot: b64, screenshot_name: file.name } : i));
-        toast("✅ Payment screenshot uploaded! Admin will review it.", "success");
+        const toAdd = Array.from(files).slice(0, remaining);
+        const newItems = await Promise.all(toAdd.map((f) => new Promise((res) => {
+          const r = new FileReader();
+          r.onload = (e) => res({ name: f.name, data: e.target.result, uploaded_at: new Date().toISOString() });
+          r.readAsDataURL(f);
+        })));
+        const merged = [...screenshots, ...newItems].slice(0, 5);
+        await sbFetch(`/rest/v1/profiles?id=eq.${user.id}`, { method: "PATCH", body: JSON.stringify({ payment_screenshots: JSON.stringify(merged) }) });
+        setScreenshots(merged);
+        toast(`✅ ${newItems.length} screenshot(s) uploaded! Admin will review them.`, "success");
       } catch (e) {
         toast(e.message, "error");
       }
-      setUploading((p) => ({ ...p, [invoiceId]: false }));
+      setUploading(false);
+    }
+    async function removeScreenshot(idx) {
+      const updated = screenshots.filter((_, i) => i !== idx);
+      try {
+        await sbFetch(`/rest/v1/profiles?id=eq.${user.id}`, { method: "PATCH", body: JSON.stringify({ payment_screenshots: JSON.stringify(updated) }) });
+        setScreenshots(updated);
+        toast("Screenshot removed", "success");
+      } catch (e) {
+        toast(e.message, "error");
+      }
     }
     return /* @__PURE__ */ import_react.default.createElement("div", null,
-      previewImg && /* @__PURE__ */ import_react.default.createElement("div", { onClick: () => setPreviewImg(null), style: { position: "fixed", inset: 0, background: "rgba(0,0,0,.85)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", cursor: "zoom-out" } },
-        /* @__PURE__ */ import_react.default.createElement("img", { src: previewImg, style: { maxWidth: "90vw", maxHeight: "90vh", borderRadius: 10, boxShadow: "0 8px 40px rgba(0,0,0,.7)" } }),
-        /* @__PURE__ */ import_react.default.createElement("div", { onClick: () => setPreviewImg(null), style: { position: "absolute", top: 18, right: 22, color: "#fff", fontSize: 28, cursor: "pointer", fontWeight: 700 } }, "×")
+      previewImg && /* @__PURE__ */ import_react.default.createElement("div", { onClick: () => setPreviewImg(null), style: { position: "fixed", inset: 0, background: "rgba(0,0,0,.88)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", cursor: "zoom-out" } },
+        /* @__PURE__ */ import_react.default.createElement("img", { src: previewImg, style: { maxWidth: "90vw", maxHeight: "88vh", borderRadius: 10, boxShadow: "0 8px 40px rgba(0,0,0,.7)" }, onClick: (e) => e.stopPropagation() }),
+        /* @__PURE__ */ import_react.default.createElement("div", { onClick: () => setPreviewImg(null), style: { position: "absolute", top: 18, right: 22, color: "#fff", fontSize: 30, cursor: "pointer", fontWeight: 700, lineHeight: 1 } }, "×")
       ),
       /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-grid" },
         /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-label" }, "Total Invoiced"), /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-value" }, "PKR ", total.toLocaleString())),
         /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-label" }, "Pending Payment"), /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-value", style: { color: "#dc2626" } }, "PKR ", unpaid.toLocaleString()))
       ),
-      /* @__PURE__ */ import_react.default.createElement("div", { style: { marginBottom: 16, padding: "16px 18px", background: "linear-gradient(135deg,#0c1e3a,#1e3a8a)", borderRadius: 12, border: "1px solid #3b82f6" } },
-        /* @__PURE__ */ import_react.default.createElement("div", { style: { fontWeight: 700, fontSize: 14, marginBottom: 6, color: "#e0f2fe" } }, "\u{1F4B3} Payment Methods"),
+      /* @__PURE__ */ import_react.default.createElement("div", { style: { marginBottom: 16, padding: "20px 22px", background: "linear-gradient(135deg,#0c1e3a,#1e3a8a)", borderRadius: 14, border: "1px solid #3b82f6" } },
+        /* @__PURE__ */ import_react.default.createElement("div", { style: { fontWeight: 700, fontSize: 15, marginBottom: 6, color: "#e0f2fe" } }, "\u{1F4B3} Payment Methods"),
         /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 13, color: "#bae6fd", marginBottom: 6 } }, "JazzCash • EasyPaisa • Bank Transfer • PayPal"),
-        /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 12, color: "#93c5fd", marginBottom: 10 } }, "Account details are provided by admin. After making payment, upload a screenshot of your payment against the invoice below for admin confirmation."),
-        /* @__PURE__ */ import_react.default.createElement("div", { style: { padding: "10px 14px", background: "rgba(251,191,36,.13)", border: "1px solid #f59e0b", borderRadius: 8, fontSize: 12, color: "#fbbf24", display: "flex", alignItems: "flex-start", gap: 8 } },
-          /* @__PURE__ */ import_react.default.createElement("span", null, "⚠️"),
-          /* @__PURE__ */ import_react.default.createElement("span", null, /* @__PURE__ */ import_react.default.createElement("strong", null, "Important:"), " Upload a clear screenshot of your payment receipt below. Admin will verify and mark your invoice as paid.")
+        /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 12, color: "#93c5fd", marginBottom: 14 } }, "Account details provided by admin. After making payment, upload your payment screenshot(s) below for confirmation."),
+        /* @__PURE__ */ import_react.default.createElement("div", { style: { padding: "12px 16px", background: "rgba(251,191,36,.13)", border: "1px solid #f59e0b", borderRadius: 10, marginBottom: 16 } },
+          /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 13, color: "#fbbf24", fontWeight: 700, marginBottom: 4 } }, "⚠️ Upload Payment Screenshot for Admin Confirmation"),
+          /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 12, color: "#fde68a" } }, "Upload up to 5 screenshots of your payment receipt(s). Admin will verify and mark your invoices as paid.")
+        ),
+        /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" } },
+          /* @__PURE__ */ import_react.default.createElement("label", { style: { cursor: screenshots.length >= 5 ? "not-allowed" : "pointer", display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 20px", background: screenshots.length >= 5 ? "#374151" : "linear-gradient(135deg,#0369a1,#0284c7)", borderRadius: 10, fontSize: 13, color: "#fff", fontWeight: 700, boxShadow: screenshots.length >= 5 ? "none" : "0 2px 12px rgba(3,105,161,.5)", opacity: screenshots.length >= 5 ? 0.6 : 1 } },
+            uploading
+              ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("span", { className: "spinner" }), " Uploading...")
+              : /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, "\u{1F4F8} Upload Payment Screenshot(s)", /* @__PURE__ */ import_react.default.createElement("span", { style: { background: "rgba(255,255,255,.2)", borderRadius: 99, padding: "1px 8px", fontSize: 11 } }, screenshots.length, "/5")),
+            !uploading && screenshots.length < 5 && /* @__PURE__ */ import_react.default.createElement("input", { type: "file", accept: "image/*", multiple: true, style: { display: "none" }, onChange: (e) => uploadScreenshots(e.target.files) })
+          ),
+          screenshots.length > 0 && /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 12, color: "#34d399", fontWeight: 600 } }, "✓ ", screenshots.length, " screenshot(s) uploaded — pending admin review")
+        ),
+        screenshots.length > 0 && /* @__PURE__ */ import_react.default.createElement("div", { style: { marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" } },
+          screenshots.map((s, idx) => /* @__PURE__ */ import_react.default.createElement("div", { key: idx, style: { position: "relative", width: 90, height: 90, borderRadius: 8, overflow: "hidden", border: "2px solid #0284c7", cursor: "pointer", flexShrink: 0 } },
+            /* @__PURE__ */ import_react.default.createElement("img", { src: s.data, style: { width: "100%", height: "100%", objectFit: "cover" }, onClick: () => setPreviewImg(s.data) }),
+            /* @__PURE__ */ import_react.default.createElement("div", { onClick: () => removeScreenshot(idx), style: { position: "absolute", top: 2, right: 2, background: "rgba(220,38,38,.9)", color: "#fff", borderRadius: "50%", width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, cursor: "pointer", lineHeight: 1 } }, "×"),
+            /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,.6)", fontSize: 9, color: "#e2e8f0", padding: "2px 4px", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" } }, s.name)
+          ))
         )
       ),
       /* @__PURE__ */ import_react.default.createElement("div", { className: "card" },
@@ -14103,8 +14179,7 @@ textarea{resize:vertical;min-height:80px}
                 /* @__PURE__ */ import_react.default.createElement("th", null, "Invoice #"),
                 /* @__PURE__ */ import_react.default.createElement("th", null, "Amount"),
                 /* @__PURE__ */ import_react.default.createElement("th", null, "Due Date"),
-                /* @__PURE__ */ import_react.default.createElement("th", null, "Status"),
-                /* @__PURE__ */ import_react.default.createElement("th", null, "\u{1F4F8} Payment Screenshot")
+                /* @__PURE__ */ import_react.default.createElement("th", null, "Status")
               )
             ),
             /* @__PURE__ */ import_react.default.createElement("tbody", null,
@@ -14115,32 +14190,7 @@ textarea{resize:vertical;min-height:80px}
                   i.due_date ? new Date(i.due_date).toLocaleDateString() : "—",
                   new Date(i.due_date) < /* @__PURE__ */ new Date() && i.status !== "paid" && /* @__PURE__ */ import_react.default.createElement("span", { className: "badge bg-red", style: { marginLeft: 6 } }, "Overdue")
                 ),
-                /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement(Badge, { status: i.status || "unpaid" })),
-                /* @__PURE__ */ import_react.default.createElement("td", null,
-                  i.status === "paid"
-                    ? /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 12, color: "#059669", fontWeight: 600 } }, "✅ Verified & Paid")
-                    : /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4 } },
-                        i.payment_screenshot
-                          ? /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4 } },
-                              /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 11, color: "#059669", fontWeight: 600 } }, "✓ Screenshot uploaded — pending admin review"),
-                              /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } },
-                                /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-xs", style: { background: "#0284c7", color: "#fff", border: "none" }, onClick: () => setPreviewImg(i.payment_screenshot) }, "\u{1F5BC}️ View"),
-                                /* @__PURE__ */ import_react.default.createElement("label", { style: { cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px", background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: 6, fontSize: 11, color: "#334155", fontWeight: 600 } },
-                                  "\u{1F504} Replace",
-                                  /* @__PURE__ */ import_react.default.createElement("input", { type: "file", accept: "image/*", style: { display: "none" }, onChange: (e) => e.target.files[0] && uploadScreenshot(i.id, e.target.files[0]) })
-                                )
-                              )
-                            )
-                          : /* @__PURE__ */ import_react.default.createElement("label", { style: { cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", background: "linear-gradient(135deg,#0369a1,#0284c7)", borderRadius: 8, fontSize: 12, color: "#fff", fontWeight: 700, boxShadow: "0 2px 8px rgba(3,105,161,.4)", whiteSpace: "nowrap" } },
-                              uploading[i.id]
-                                ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("span", { className: "spinner" }), " Uploading...")
-                                : /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null,
-                                    "\u{1F4F8} Upload Payment Screenshot",
-                                    /* @__PURE__ */ import_react.default.createElement("input", { type: "file", accept: "image/*", style: { display: "none" }, onChange: (e) => e.target.files[0] && uploadScreenshot(i.id, e.target.files[0]) })
-                                  )
-                            )
-                      )
-                )
+                /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement(Badge, { status: i.status || "unpaid" }))
               ))
             )
           )
