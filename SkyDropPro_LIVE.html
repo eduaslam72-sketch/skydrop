@@ -13882,14 +13882,17 @@ textarea{resize:vertical;min-height:80px}
         placeholder: "Notes (optional)",
         style: { width: "100%", padding: "4px 8px", background: "#1e293b", border: "1px solid #334155", borderRadius: 5, color: "#e2e8f0", fontSize: 11, outline: "none", boxSizing: "border-box", marginBottom: 4 }
       }
-    ), /* @__PURE__ */ import_react.default.createElement("label", { style: { display: "flex", alignItems: "center", gap: 6, padding: "5px 8px", border: "1px dashed #334155", borderRadius: 6, cursor: "pointer", fontSize: 10, color: "#64748b" } }, "\u{1F4CE} ", item.labelFiles?.length > 0 ? item.labelFiles.length + " label(s)" : "Upload label", /* @__PURE__ */ import_react.default.createElement(
+    ), /* @__PURE__ */ import_react.default.createElement("label", { onClick: (e) => e.stopPropagation(), style: { display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", border: "1px dashed #0284c7", borderRadius: 6, cursor: "pointer", fontSize: 11, color: "#38bdf8", background: "rgba(2,132,199,.07)" } }, "\u{1F4CE} ", item.labelFiles?.length > 0 ? /* @__PURE__ */ import_react.default.createElement("span", { style: { color: "#34d399", fontWeight: 600 } }, "\u2713 ", item.labelFiles.length, " label", item.labelFiles.length > 1 ? "s" : "", " ready") : /* @__PURE__ */ import_react.default.createElement("span", null, "Upload Shipping Label (PDF/Image)"), /* @__PURE__ */ import_react.default.createElement(
       "input",
       {
         type: "file",
         accept: "image/*,application/pdf",
         multiple: true,
         style: { display: "none" },
-        onChange: (e) => updateCart(item.sku.id, "labelFiles", Array.from(e.target.files).slice(0, 5))
+        onChange: (e) => {
+          e.stopPropagation();
+          updateCart(item.sku.id, "labelFiles", Array.from(e.target.files).slice(0, 5));
+        }
       }
     ))))), /* @__PURE__ */ import_react.default.createElement("div", { style: { marginTop: 12, padding: "10px 12px", background: "#0f172a", borderRadius: 8, border: "1px solid #1e293b" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 } }, /* @__PURE__ */ import_react.default.createElement("span", { style: { color: "#94a3b8" } }, "Total"), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontWeight: 700, color: "#38bdf8" } }, "PKR ", cartTotal.toLocaleString())), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 12 } }, /* @__PURE__ */ import_react.default.createElement("span", { style: { color: "#94a3b8" } }, "Est. Profit"), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontWeight: 700, color: cartProfit >= 0 ? "#34d399" : "#f87171" } }, "PKR ", cartProfit.toLocaleString()))), /* @__PURE__ */ import_react.default.createElement(
       "button",
