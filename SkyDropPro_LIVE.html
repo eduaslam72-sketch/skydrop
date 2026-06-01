@@ -13071,6 +13071,44 @@ textarea{resize:vertical;min-height:80px}
     const dist = stars.map((s) => ({ star: s, count: items.filter((i) => i.rating === s).length }));
     return /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 12, marginBottom: 16 } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { background: "#1e293b", borderRadius: 10, padding: 16, border: "1px solid #334155", textAlign: "center" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 36, fontWeight: 800, color: "#fbbf24" } }, avgRating), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 22, marginTop: 2 } }, "\u2B50".repeat(Math.round(avgRating))), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 11, color: "#64748b", marginTop: 4 } }, "Average Rating (", items.length, " reviews)")), /* @__PURE__ */ import_react.default.createElement("div", { style: { background: "#1e293b", borderRadius: 10, padding: 16, border: "1px solid #334155" } }, dist.reverse().map((d) => /* @__PURE__ */ import_react.default.createElement("div", { key: d.star, style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 4 } }, /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 11, color: "#64748b", width: 20 } }, d.star, "\u2B50"), /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1, height: 8, background: "#0f172a", borderRadius: 99 } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { height: 8, borderRadius: 99, background: "#fbbf24", width: items.length > 0 ? d.count / items.length * 100 + "%" : "0%", transition: "width 1s" } })), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 11, color: "#94a3b8", width: 20 } }, d.count))))), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" } }, ["all", "5", "4", "3", "2", "1"].map((f) => /* @__PURE__ */ import_react.default.createElement("button", { key: f, onClick: () => setFilter(f), style: { padding: "5px 12px", borderRadius: 99, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, background: filter === f ? "#fbbf24" : "#1e293b", color: filter === f ? "#0f172a" : "#64748b" } }, f === "all" ? "All Reviews" : f + "\u2B50"))), ld ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "Loading...") : filtered.length === 0 ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "No feedback yet") : /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, filtered.map((item, i) => /* @__PURE__ */ import_react.default.createElement("div", { key: i, style: { background: "#1e293b", borderRadius: 10, border: "1px solid #334155", padding: 14 } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 } }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("span", { style: { fontWeight: 700, fontSize: 14, color: "#e2e8f0" } }, item.dropshipper_name), /* @__PURE__ */ import_react.default.createElement("span", { style: { marginLeft: 8, fontSize: 11, background: "#0f172a", color: "#7dd3fc", padding: "2px 7px", borderRadius: 99 } }, item.category)), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6 } }, /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 16 } }, "\u2B50".repeat(item.rating)), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 11, color: "#475569" } }, new Date(item.created_at).toLocaleDateString()))), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 13, color: "#94a3b8", lineHeight: 1.6, fontStyle: "italic" } }, '"', item.message, '"')))));
   }
+  var NAV = {
+    admin: [
+      { id: "dashboard",     icon: "\u{1F4CA}", label: "Dashboard" },
+      { id: "my_orders",    icon: "\u{1F6D2}", label: "My Orders" },
+      { id: "orders",       icon: "\u{1F4E6}", label: "All Orders",      bkey: "anomalies" },
+      { id: "inventory",    icon: "\u{1F5C3}\uFE0F", label: "Inventory" },
+      { id: "sku_requests", icon: "\u{1F4CB}", label: "SKU Requests",    bkey: "sku_req" },
+      { id: "dropshippers", icon: "\u{1F465}", label: "Dropshippers",    bkey: "pend_users" },
+      { id: "anomalies",    icon: "\u{1F6A9}", label: "Flagged Orders",  bkey: "anomalies" },
+      { id: "warehouse_view",icon:"\u{1F3ED}", label: "Warehouse View" },
+      { id: "ds_summary",   icon: "\u{1F4BC}", label: "DS Financials" },
+      { id: "suppliers",    icon: "\u{1F91D}", label: "Suppliers" },
+      { id: "payments",     icon: "\u{1F4B3}", label: "Payments" },
+      { id: "monthly_report",icon:"\u{1F4C5}", label: "Monthly Reports" },
+      { id: "manage_admins",icon: "\u{1F511}", label: "Manage Admins" },
+      { id: "feedback",     icon: "\u2B50",   label: "Feedback" }
+    ],
+    dropshipper: [
+      { id: "dashboard",     icon: "\u{1F3E0}", label: "New Order" },
+      { id: "my_orders",    icon: "\u{1F4E6}", label: "My Orders" },
+      { id: "invoices",     icon: "\u{1F9FE}", label: "Invoices" },
+      { id: "monthly_report",icon:"\u{1F4C5}", label: "Monthly Closing" },
+      { id: "propose_sku",  icon: "\u2795",    label: "Propose SKU" },
+      { id: "disputes",     icon: "\u26A0\uFE0F", label: "Disputes" },
+      { id: "feedback",     icon: "\u2B50",   label: "Feedback" }
+    ],
+    warehouse: [
+      { id: "queue",    icon: "\u{1F4EC}", label: "Order Queue" },
+      { id: "shipped",  icon: "\u{1F69A}", label: "Shipped" },
+      { id: "wh_report",icon: "\u{1F4CA}", label: "WH Report" },
+      { id: "disputes", icon: "\u26A0\uFE0F", label: "Disputes" }
+    ],
+    supplier: [
+      { id: "dashboard",  icon: "\u{1F4CA}", label: "Dashboard" },
+      { id: "inventory",  icon: "\u{1F5C3}\uFE0F", label: "Inventory" },
+      { id: "payments",   icon: "\u{1F4B0}", label: "Payments" }
+    ]
+  };
   var WA_NUMBER = "923346517686";
   var BOT_FAQS = [
     { q: /order|place|how.*order|add.*order/i, a: "To place an order: go to \u{1F4E6} New Order in the sidebar, search for a product, click it, enter quantity and notes, upload shipping label if ready, then click Place Order!" },
