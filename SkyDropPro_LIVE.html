@@ -6,7 +6,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 body.light-mode::before{opacity:.2}
 #root{position:relative;z-index:1}
 </style>
-</head><body style="margin:0;background:#0f172a"><div id="root"></div><script>(() => {
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"></head><body style="margin:0;background:#0f172a"><div id="root"></div><script>(() => {
   var __create = Object.create;
   var __defProp = Object.defineProperty;
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -12829,6 +12829,83 @@ textarea{resize:vertical;min-height:80px}
 .animate-float{animation:float 3s ease-in-out infinite}
 .animate-fade-up{animation:fadeInUp .6s ease forwards}
 .animate-slide-left{animation:slideInLeft .5s ease forwards}
+/* ── TYPOGRAPHY ── */
+body{font-family:'Inter','Segoe UI',sans-serif}
+.sidebar-logo,.topbar-title,.card-title,h1,h2,h3{font-family:'Plus Jakarta Sans','Segoe UI',sans-serif}
+
+/* ── PAGE TRANSITION ── */
+@keyframes fadeInPage{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.content{animation:fadeInPage .22s ease forwards}
+
+/* ── SIDEBAR GRADIENT ── */
+.sidebar{background:linear-gradient(180deg,#0a1628 0%,#0d1e35 55%,#0a1628 100%) !important}
+
+/* ── GLASSMORPHISM CARDS ── */
+.card{background:rgba(30,41,59,.88) !important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.07) !important;box-shadow:0 4px 24px rgba(0,0,0,.28) !important}
+
+/* ── BUTTON MICRO-INTERACTIONS ── */
+.btn{transition:all .18s ease !important}
+.btn:hover:not(:disabled){transform:translateY(-1px) scale(1.02);box-shadow:0 6px 16px rgba(0,0,0,.35)}
+.btn:active:not(:disabled){transform:translateY(0) scale(.98)}
+.btn-primary:hover:not(:disabled){box-shadow:0 6px 20px rgba(2,132,199,.42) !important}
+.btn-success:hover:not(:disabled){box-shadow:0 6px 20px rgba(5,150,105,.42) !important}
+.btn-danger:hover:not(:disabled){box-shadow:0 6px 20px rgba(220,38,38,.42) !important}
+
+/* ── NAV ITEM SLIDE IN ── */
+@keyframes navSlideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+.nav-item{animation:navSlideIn .18s ease forwards}
+
+/* ── STAT/SKU CARD HOVER LIFT ── */
+.stat-card,.sku-card:not(.selected){transition:all .2s ease}
+.stat-card:hover,.sku-card:not(.selected):hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.38)}
+
+/* ── STATUS BADGE PULSE ── */
+@keyframes badgePulse{0%,100%{box-shadow:0 0 0 0 rgba(234,179,8,.35)}50%{box-shadow:0 0 0 5px rgba(234,179,8,0)}}
+@keyframes dangerPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.35)}50%{box-shadow:0 0 0 5px rgba(239,68,68,0)}}
+.badge.bg-yellow{animation:badgePulse 2.2s ease-in-out infinite}
+.badge.bg-red{animation:dangerPulse 2.2s ease-in-out infinite}
+
+/* ── LOADING SKELETON ── */
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+.skeleton{background:linear-gradient(90deg,#1e293b 25%,#2d3f55 50%,#1e293b 75%);background-size:800px 100%;animation:shimmer 1.6s ease-in-out infinite;border-radius:6px;height:18px}
+
+/* ── TABLE ROW HOVER ── */
+tbody tr{transition:background .15s ease}
+tbody tr:hover{background:rgba(56,189,248,.06) !important}
+
+/* ── INPUT FOCUS GLOW ── */
+input:focus,select:focus,textarea:focus{border-color:#0ea5e9 !important;box-shadow:0 0 0 3px rgba(14,165,233,.18) !important}
+
+/* ── TOPBAR FROSTED GLASS ── */
+.topbar{background:rgba(15,23,42,.94) !important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+
+/* ── LOGO HOVER 3D ── */
+.sidebar-logo{cursor:pointer;transition:all .3s ease}
+.sidebar-logo:hover svg{transform:rotateY(18deg) rotateX(8deg) scale(1.08);filter:drop-shadow(0 0 8px rgba(14,165,233,.5))}
+
+/* ── DARK / LIGHT MODE ── */
+body.light-mode{background:#eef2f7 !important;color:#0f172a !important}
+body.light-mode .sidebar{background:linear-gradient(180deg,#0c2340 0%,#0f3060 100%) !important}
+body.light-mode .main{background:#eef2f7}
+body.light-mode .topbar{background:rgba(255,255,255,.94) !important;border-color:#e2e8f0 !important}
+body.light-mode .topbar-title{color:#0369a1 !important}
+body.light-mode .card{background:rgba(255,255,255,.95) !important;border-color:#e2e8f0 !important;color:#0f172a !important;box-shadow:0 4px 16px rgba(0,0,0,.09) !important}
+body.light-mode .card-title{color:#0369a1 !important}
+body.light-mode input,body.light-mode select,body.light-mode textarea{background:#fff !important;color:#0f172a !important;border-color:#cbd5e1 !important}
+body.light-mode table{color:#0f172a !important}
+body.light-mode th{background:#f1f5f9 !important;color:#475569 !important;border-color:#e2e8f0 !important}
+body.light-mode td{border-color:#e2e8f0 !important;color:#1e293b !important}
+body.light-mode .login-card{background:rgba(255,255,255,.97) !important;color:#0f172a !important}
+body.light-mode .login-card label{color:#475569 !important}
+body.light-mode .info-box{background:#f8fafc !important;border-color:#e2e8f0 !important;color:#475569 !important}
+body.light-mode .stat-card{background:#ffffff !important;border-color:#e2e8f0 !important;color:#0f172a !important}
+body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !important;color:#0f172a !important}
+
+/* ── THEME TOGGLE BUTTON ── */
+#theme-toggle{position:fixed;bottom:140px;right:24px;z-index:8997;width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.15);cursor:pointer;font-size:20px;background:#1e293b;box-shadow:0 4px 14px rgba(0,0,0,.4);transition:all .25s ease;display:flex;align-items:center;justify-content:center;line-height:1}
+#theme-toggle:hover{transform:scale(1.12) rotate(15deg);box-shadow:0 6px 20px rgba(0,0,0,.5)}
+
+
 `;
   var CATEGORIES = {
     "Patches": ["Embroidered Patches", "PVC Patches", "Velcro Patches", "Iron Patches", "Sew On Patches"],
@@ -14441,33 +14518,7 @@ textarea{resize:vertical;min-height:80px}
         w.location.href = url;
         setTimeout(() => w.print(), 1e3);
       } else {
-        w.document.write(`<html><body style="margin:0"><img src="${labelData}" style="max-width:100%"/>
-<script>
-(function(){
-  // Favicon
-  var link = document.createElement('link');
-  link.rel = 'icon';
-  link.type = 'image/svg+xml';
-  link.href = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 66 76'%3E%3Cpolygon points='33,2 61,22 33,70 5,22' fill='%230c4a6e'/%3E%3Cpolygon points='33,10 55,24 33,60 11,24' fill='%230369a1'/%3E%3Cpolygon points='33,18 47,26 33,50 19,26' fill='%230ea5e9'/%3E%3Ctext x='33' y='32' font-family='sans-serif' font-size='16' font-weight='900' fill='%23fff' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E";
-  document.head.appendChild(link);
-
-  // Theme toggle button
-  var btn = document.createElement('button');
-  btn.id = 'theme-toggle';
-  btn.title = 'Toggle light/dark mode';
-  var isLight = localStorage.getItem('skyDrop_theme') === 'light';
-  if(isLight){ document.body.classList.add('light-mode'); }
-  btn.innerHTML = isLight ? '&#9728;&#65039;' : '&#127769;';
-  btn.onclick = function(){
-    isLight = !isLight;
-    document.body.classList.toggle('light-mode', isLight);
-    btn.innerHTML = isLight ? '&#9728;&#65039;' : '&#127769;';
-    localStorage.setItem('skyDrop_theme', isLight ? 'light' : 'dark');
-  };
-  document.body.appendChild(btn);
-})();
-</script>
-</body></html>`);
+        w.document.write(`<html><body style="margin:0"><img src="${labelData}" style="max-width:100%"/></body></html>`);
       }
       w.document.close();
       setTimeout(() => w.print(), 500);
@@ -15383,4 +15434,30 @@ react-dom/cjs/react-dom-client.production.js:
    * LICENSE file in the root directory of this source tree.
    *)
 */
-</script></body></html>
+</script>
+<script>
+(function(){
+  // Favicon
+  var link = document.createElement('link');
+  link.rel = 'icon';
+  link.type = 'image/svg+xml';
+  link.href = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 66 76'%3E%3Cpolygon points='33,2 61,22 33,70 5,22' fill='%230c4a6e'/%3E%3Cpolygon points='33,10 55,24 33,60 11,24' fill='%230369a1'/%3E%3Cpolygon points='33,18 47,26 33,50 19,26' fill='%230ea5e9'/%3E%3Ctext x='33' y='32' font-family='sans-serif' font-size='16' font-weight='900' fill='%23fff' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E";
+  document.head.appendChild(link);
+
+  // Theme toggle button
+  var btn = document.createElement('button');
+  btn.id = 'theme-toggle';
+  btn.title = 'Toggle light/dark mode';
+  var isLight = localStorage.getItem('skyDrop_theme') === 'light';
+  if(isLight){ document.body.classList.add('light-mode'); }
+  btn.innerHTML = isLight ? '&#9728;&#65039;' : '&#127769;';
+  btn.onclick = function(){
+    isLight = !isLight;
+    document.body.classList.toggle('light-mode', isLight);
+    btn.innerHTML = isLight ? '&#9728;&#65039;' : '&#127769;';
+    localStorage.setItem('skyDrop_theme', isLight ? 'light' : 'dark');
+  };
+  document.body.appendChild(btn);
+})();
+</script>
+</body></html>
