@@ -13073,43 +13073,73 @@ textarea{resize:vertical;min-height:80px}
   }
   var NAV = {
     admin: [
-      { id: "dashboard",     icon: "\u{1F4CA}", label: "Dashboard" },
-      { id: "my_orders",    icon: "\u{1F6D2}", label: "My Orders" },
-      { id: "orders",       icon: "\u{1F4E6}", label: "All Orders",      bkey: "anomalies" },
-      { id: "inventory",    icon: "\u{1F5C3}\uFE0F", label: "Inventory" },
-      { id: "sku_requests", icon: "\u{1F4CB}", label: "SKU Requests",    bkey: "sku_req" },
-      { id: "dropshippers", icon: "\u{1F465}", label: "Dropshippers",    bkey: "pend_users" },
-      { id: "anomalies",    icon: "\u{1F6A9}", label: "Flagged Orders",  bkey: "anomalies" },
-      { id: "warehouse_view",icon:"\u{1F3ED}", label: "Warehouse View" },
-      { id: "ds_summary",   icon: "\u{1F4BC}", label: "DS Financials" },
-      { id: "suppliers",    icon: "\u{1F91D}", label: "Suppliers" },
-      { id: "payments",     icon: "\u{1F4B3}", label: "Payments" },
-      { id: "monthly_report",icon:"\u{1F4C5}", label: "Monthly Reports" },
-      { id: "manage_admins",icon: "\u{1F511}", label: "Manage Admins" },
-      { id: "feedback",     icon: "\u2B50",   label: "Feedback" }
+      { id: "dashboard", icon: "\u{1F4CA}", label: "Dashboard" },
+      {
+        group: "Orders", icon: "\u{1F4E6}",
+        children: [
+          { id: "my_orders",  icon: "\u{1F6D2}", label: "My Orders" },
+          { id: "orders",     icon: "\u{1F4E6}", label: "All Orders",     bkey: "anomalies" },
+          { id: "anomalies",  icon: "\u{1F6A9}", label: "Flagged Orders", bkey: "anomalies" }
+        ]
+      },
+      {
+        group: "Inventory", icon: "\u{1F5C3}\uFE0F",
+        children: [
+          { id: "inventory",    icon: "\u{1F5C3}\uFE0F", label: "Products & Stock" },
+          { id: "sku_requests", icon: "\u{1F4CB}",         label: "SKU Requests",  bkey: "sku_req" }
+        ]
+      },
+      {
+        group: "People", icon: "\u{1F465}",
+        children: [
+          { id: "dropshippers", icon: "\u{1F465}", label: "Dropshippers", bkey: "pend_users" },
+          { id: "suppliers",    icon: "\u{1F91D}", label: "Suppliers" }
+        ]
+      },
+      {
+        group: "Finances", icon: "\u{1F4B0}",
+        children: [
+          { id: "ds_summary", icon: "\u{1F4BC}", label: "DS Financials" },
+          { id: "payments",   icon: "\u{1F4B3}", label: "Payments" }
+        ]
+      },
+      {
+        group: "Warehouse", icon: "\u{1F3ED}",
+        children: [
+          { id: "warehouse_view", icon: "\u{1F3ED}", label: "Warehouse View" }
+        ]
+      },
+      {
+        group: "Reports & Settings", icon: "\u{1F4C5}",
+        children: [
+          { id: "monthly_report", icon: "\u{1F4C5}", label: "Monthly Reports" },
+          { id: "manage_admins",  icon: "\u{1F511}", label: "Manage Admins" },
+          { id: "feedback",       icon: "\u2B50",    label: "Feedback" }
+        ]
+      }
     ],
     dropshipper: [
-      { id: "dashboard",     icon: "\u{1F3E0}", label: "New Order" },
-      { id: "my_orders",    icon: "\u{1F4E6}", label: "My Orders" },
-      { id: "invoices",     icon: "\u{1F9FE}", label: "Invoices" },
-      { id: "monthly_report",icon:"\u{1F4C5}", label: "Monthly Closing" },
-      { id: "propose_sku",  icon: "\u2795",    label: "Propose SKU" },
-      { id: "disputes",     icon: "\u26A0\uFE0F", label: "Disputes" },
-      { id: "feedback",     icon: "\u2B50",   label: "Feedback" }
+      { id: "dashboard",      icon: "\u{1F3E0}", label: "New Order" },
+      { id: "my_orders",     icon: "\u{1F4E6}", label: "My Orders" },
+      { id: "invoices",      icon: "\u{1F9FE}", label: "Invoices" },
+      { id: "monthly_report",icon: "\u{1F4C5}", label: "Monthly Closing" },
+      { id: "propose_sku",   icon: "\u2795",    label: "Propose SKU" },
+      { id: "disputes",      icon: "\u26A0\uFE0F", label: "Disputes" },
+      { id: "feedback",      icon: "\u2B50",    label: "Feedback" }
     ],
     warehouse: [
-      { id: "queue",    icon: "\u{1F4EC}", label: "Order Queue" },
-      { id: "shipped",  icon: "\u{1F69A}", label: "Shipped" },
-      { id: "wh_report",icon: "\u{1F4CA}", label: "WH Report" },
-      { id: "disputes", icon: "\u26A0\uFE0F", label: "Disputes" }
+      { id: "queue",     icon: "\u{1F4EC}", label: "Order Queue" },
+      { id: "shipped",   icon: "\u{1F69A}", label: "Shipped" },
+      { id: "wh_report", icon: "\u{1F4CA}", label: "WH Report" },
+      { id: "disputes",  icon: "\u26A0\uFE0F", label: "Disputes" }
     ],
     supplier: [
-      { id: "dashboard",  icon: "\u{1F4CA}", label: "Dashboard" },
-      { id: "inventory",  icon: "\u{1F5C3}\uFE0F", label: "Inventory" },
-      { id: "payments",   icon: "\u{1F4B0}", label: "Payments" }
+      { id: "dashboard", icon: "\u{1F4CA}", label: "Dashboard" },
+      { id: "inventory", icon: "\u{1F5C3}\uFE0F", label: "Inventory" },
+      { id: "payments",  icon: "\u{1F4B0}", label: "Payments" }
     ]
   };
-  var WA_NUMBER = "923346517686";
+    var WA_NUMBER = "923346517686";
   var BOT_FAQS = [
     { q: /order|place|how.*order|add.*order/i, a: "To place an order: go to \u{1F4E6} New Order in the sidebar, search for a product, click it, enter quantity and notes, upload shipping label if ready, then click Place Order!" },
     { q: /shipping|label|upload|pdf/i, a: "You can upload shipping labels (PDF or image) when placing an order or later from My Orders tab. Warehouse team downloads and prints them directly." },
