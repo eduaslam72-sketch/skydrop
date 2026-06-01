@@ -14847,26 +14847,224 @@ textarea{resize:vertical;min-height:80px}
     return /* @__PURE__ */ import_react.default.createElement("div", { className: "card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "card-title" }, "\u{1F69A} Shipped Orders (", orders.length, ")"), ld ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "Loading...") : orders.length === 0 ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "No shipped orders") : /* @__PURE__ */ import_react.default.createElement("div", { className: "table-wrap" }, /* @__PURE__ */ import_react.default.createElement("table", null, /* @__PURE__ */ import_react.default.createElement("thead", null, /* @__PURE__ */ import_react.default.createElement("tr", null, /* @__PURE__ */ import_react.default.createElement("th", null, "Order ID"), /* @__PURE__ */ import_react.default.createElement("th", null, "Dropshipper"), /* @__PURE__ */ import_react.default.createElement("th", null, "SKU"), /* @__PURE__ */ import_react.default.createElement("th", null, "Carrier"), /* @__PURE__ */ import_react.default.createElement("th", null, "Tracking"), /* @__PURE__ */ import_react.default.createElement("th", null, "Shipped"), /* @__PURE__ */ import_react.default.createElement("th", null, "Actions"))), /* @__PURE__ */ import_react.default.createElement("tbody", null, orders.map((o) => /* @__PURE__ */ import_react.default.createElement("tr", { key: o.id }, /* @__PURE__ */ import_react.default.createElement("td", { style: { fontFamily: "monospace", fontSize: 11 } }, o.order_number || "#" + o.id?.slice(0, 8)), /* @__PURE__ */ import_react.default.createElement("td", null, o.dropshipper_name), /* @__PURE__ */ import_react.default.createElement("td", null, o.sku_name), /* @__PURE__ */ import_react.default.createElement("td", null, o.carrier || "\u2014"), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontFamily: "monospace" } }, o.tracking_number || "\u2014"), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11 } }, o.shipped_at ? new Date(o.shipped_at).toLocaleDateString() : "\u2014"), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-success btn-xs", onClick: () => deliver(o.id) }, "\u2714 Delivered"))))))));
   }
   function WarehouseReport({ toast }) {
-    const [orders, setOrders] = (0, import_react.useState)([]);
-    const [ld, setLd] = (0, import_react.useState)(true);
-    const [month, setMonth] = (0, import_react.useState)((/* @__PURE__ */ new Date()).toISOString().slice(0, 7));
+    const RATE_USD  = 1.5;   // USD per order
+    const [orders,  setOrders]  = (0, import_react.useState)([]);
+    const [ld,      setLd]      = (0, import_react.useState)(true);
+    const [pkrRate, setPkrRate] = (0, import_react.useState)(280);
+    const [paid,    setPaid]    = (0, import_react.useState)({});   // { "2026-05": true }
+    const [open,    setOpen]    = (0, import_react.useState)(null); // expanded month key
+    const [saving,  setSaving]  = (0, import_react.useState)({});
+
     (0, import_react.useEffect)(() => {
       (async () => {
         try {
-          setOrders(await sbFetch("/rest/v1/orders?select=*&order=created_at.desc"));
+          const [ord, [cfg]] = await Promise.all([
+            sbFetch("/rest/v1/orders?select=id,order_number,created_at,status,quantity,dropshipper_name,sku_name&order=created_at.desc"),
+            sbFetch("/rest/v1/profiles?email=eq.skycart@system&select=payment_screenshots").catch(() => [null])
+          ]);
+          setOrders(ord || []);
+          // Load paid status from localStorage as fallback
+          try {
+            const stored = JSON.parse(localStorage.getItem("wh_paid") || "{}");
+            setPaid(stored);
+          } catch(e) {}
         } catch (e) {
           toast(e.message, "error");
         }
         setLd(false);
       })();
     }, []);
-    const filtered = orders.filter((o) => o.created_at?.slice(0, 7) === month);
-    const shipped = filtered.filter((o) => ["shipped", "delivered"].includes(o.status));
-    const totalWHFee = filtered.reduce((s, o) => s + (o.wh_fee || 0) * (o.quantity || 1), 0);
-    return /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("div", { style: { marginBottom: 12, display: "flex", alignItems: "center", gap: 12 } }, /* @__PURE__ */ import_react.default.createElement("label", { style: { fontWeight: 600, fontSize: 13 } }, "Select Month:"), /* @__PURE__ */ import_react.default.createElement("input", { type: "month", value: month, onChange: (e) => setMonth(e.target.value), style: { padding: "6px 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13 } })), /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-grid" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-label" }, "Total Orders"), /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-value" }, filtered.length)), /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-label" }, "Shipped/Delivered"), /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-value", style: { color: "#059669" } }, shipped.length)), /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-label" }, "WH Fees Earned"), /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-value" }, "PKR ", totalWHFee.toLocaleString()))), /* @__PURE__ */ import_react.default.createElement("div", { className: "card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "card-title" }, "Orders \u2014 ", month), ld ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "Loading...") : filtered.length === 0 ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "No orders this month") : /* @__PURE__ */ import_react.default.createElement("div", { className: "table-wrap" }, /* @__PURE__ */ import_react.default.createElement("table", null, /* @__PURE__ */ import_react.default.createElement("thead", null, /* @__PURE__ */ import_react.default.createElement("tr", null, /* @__PURE__ */ import_react.default.createElement("th", null, "Order ID"), /* @__PURE__ */ import_react.default.createElement("th", null, "Dropshipper"), /* @__PURE__ */ import_react.default.createElement("th", null, "SKU"), /* @__PURE__ */ import_react.default.createElement("th", null, "Qty"), /* @__PURE__ */ import_react.default.createElement("th", null, "WH Fee"), /* @__PURE__ */ import_react.default.createElement("th", null, "Status"), /* @__PURE__ */ import_react.default.createElement("th", null, "Label"), /* @__PURE__ */ import_react.default.createElement("th", null, "Date"))), /* @__PURE__ */ import_react.default.createElement("tbody", null, filtered.map((o) => {
-      const whTotal = (o.wh_fee || 0) * (o.quantity || 1);
-      return /* @__PURE__ */ import_react.default.createElement("tr", { key: o.id }, /* @__PURE__ */ import_react.default.createElement("td", { style: { fontFamily: "monospace", fontSize: 11 } }, o.order_number || "#" + o.id?.slice(0, 8)), /* @__PURE__ */ import_react.default.createElement("td", null, o.dropshipper_name), /* @__PURE__ */ import_react.default.createElement("td", null, o.sku_name), /* @__PURE__ */ import_react.default.createElement("td", null, o.quantity), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontWeight: 600 } }, "PKR ", whTotal.toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement(Badge, { status: o.status })), /* @__PURE__ */ import_react.default.createElement("td", null, o.shipping_label ? /* @__PURE__ */ import_react.default.createElement("span", { style: { color: "#059669", fontSize: 11 } }, "\u2713") : /* @__PURE__ */ import_react.default.createElement("span", { style: { color: "#d97706", fontSize: 11 } }, "\u2717")), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11 } }, new Date(o.created_at).toLocaleDateString()));
-    }))))));
+
+    async function togglePaid(monthKey) {
+      const newPaid = { ...paid, [monthKey]: !paid[monthKey] };
+      setPaid(newPaid);
+      localStorage.setItem("wh_paid", JSON.stringify(newPaid));
+      toast(newPaid[monthKey] ? "✅ Month marked as settled — no pending liabilities" : "Month reopened", newPaid[monthKey] ? "success" : "info");
+    }
+
+    if (ld) return /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 260, gap: 14 } },
+      /* @__PURE__ */ import_react.default.createElement("div", { className: "big-spinner" }),
+      /* @__PURE__ */ import_react.default.createElement("p", { style: { color: "#64748b" } }, "Loading warehouse report...")
+    );
+
+    // Group orders by month
+    const months = {};
+    orders.forEach((o) => {
+      const key = o.created_at?.slice(0, 7);
+      if (!key) return;
+      if (!months[key]) months[key] = [];
+      months[key].push(o);
+    });
+    const sortedMonths = Object.keys(months).sort((a, b) => b.localeCompare(a));
+    const totalOrders  = orders.length;
+    const totalPKR     = totalOrders * RATE_USD * pkrRate;
+    const paidMonths   = sortedMonths.filter((k) => paid[k]);
+    const unpaidMonths = sortedMonths.filter((k) => !paid[k]);
+    const paidOrders   = paidMonths.reduce((s, k) => s + months[k].length, 0);
+    const unpaidOrders = unpaidMonths.reduce((s, k) => s + months[k].length, 0);
+    const unpaidPKR    = unpaidOrders * RATE_USD * pkrRate;
+
+    const monthLabel = (key) => { const [y, m] = key.split("-"); return new Date(y, m - 1).toLocaleString("en", { month: "long", year: "numeric" }); };
+
+    return /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 18 } },
+
+      /* ── HEADER + PKR RATE ─────────────────────────────────── */
+      /* @__PURE__ */ import_react.default.createElement("div", { style: { background: "linear-gradient(135deg,#0c1e3a,#1e3a8a)", border: "1px solid #3b82f6", borderRadius: 14, padding: "20px 24px" } },
+        /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 14 } },
+          /* @__PURE__ */ import_react.default.createElement("div", null,
+            /* @__PURE__ */ import_react.default.createElement("div", { style: { fontWeight: 800, fontSize: 17, color: "#e0f2fe", marginBottom: 4 } }, "🏭 Warehouse Fee Report"),
+            /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 13, color: "#93c5fd" } }, "Rate: $", RATE_USD, " USD per order · Fee payable to SkyCart at month closing")
+          ),
+          /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, background: "rgba(255,255,255,.07)", borderRadius: 10, padding: "10px 14px" } },
+            /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 12, color: "#93c5fd", fontWeight: 600 } }, "USD → PKR Rate:"),
+            /* @__PURE__ */ import_react.default.createElement("input", { type: "number", value: pkrRate, onChange: (e) => setPkrRate(Number(e.target.value) || 280), style: { width: 80, background: "#0f172a", border: "1px solid #334155", borderRadius: 6, color: "#e2e8f0", padding: "4px 8px", fontSize: 14, fontWeight: 700 } }),
+            /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 11, color: "#64748b" } }, "PKR")
+          )
+        ),
+        /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))", gap: 10, marginTop: 16 } },
+          [
+            ["Total Orders Processed", totalOrders,      "#38bdf8",  "📦"],
+            ["Total Fee (All Time)",   "PKR " + Math.round(totalPKR).toLocaleString(), "#e2e8f0", "💰"],
+            ["Settled Months",         paidMonths.length, "#34d399", "✅"],
+            ["Pending Payment",        "PKR " + Math.round(unpaidPKR).toLocaleString(), unpaidPKR > 0 ? "#f87171" : "#34d399", "⏳"]
+          ].map(([label, val, color, icon]) => /* @__PURE__ */ import_react.default.createElement("div", { key: label, style: { background: "rgba(255,255,255,.06)", borderRadius: 10, padding: "12px 14px" } },
+            /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 11, color: "#64748b", marginBottom: 4 } }, icon, " ", label),
+            /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 18, fontWeight: 800, color } }, val)
+          ))
+        )
+      ),
+
+      /* ── FORMULA BANNER ────────────────────────────────────── */
+      /* @__PURE__ */ import_react.default.createElement("div", { style: { background: "rgba(251,191,36,.08)", border: "1px solid #f59e0b", borderRadius: 10, padding: "12px 18px", fontSize: 13, color: "#fde68a", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" } },
+        /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 18 } }, "🧮"),
+        /* @__PURE__ */ import_react.default.createElement("span", null, /* @__PURE__ */ import_react.default.createElement("strong", null, "Fee Formula: "), "Orders × $1.5 × PKR ", pkrRate, " = PKR per order = ",
+          /* @__PURE__ */ import_react.default.createElement("strong", { style: { color: "#fbbf24" } }, "PKR ", (RATE_USD * pkrRate).toFixed(0), " per order")),
+        /* @__PURE__ */ import_react.default.createElement("span", { style: { color: "#94a3b8", fontSize: 11 } }, "· Example: 21 orders × $1.5 × ", pkrRate, " = PKR ", Math.round(21 * RATE_USD * pkrRate).toLocaleString())
+      ),
+
+      /* ── MONTH CARDS ───────────────────────────────────────── */
+      sortedMonths.length === 0
+        ? /* @__PURE__ */ import_react.default.createElement("div", { style: { color: "#475569", textAlign: "center", padding: 40 } }, "No orders processed yet")
+        : /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } },
+
+            /* Pending months first */
+            unpaidMonths.length > 0 && /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 11, color: "#f87171", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 } }, "⏳ Pending Payment"),
+            ...unpaidMonths.map((key) => {
+              const ords = months[key];
+              const fee  = Math.round(ords.length * RATE_USD * pkrRate);
+              const isOpen = open === key;
+              return /* @__PURE__ */ import_react.default.createElement("div", { key },
+                /* Card header */
+                /* @__PURE__ */ import_react.default.createElement("div", {
+                  onClick: () => setOpen(isOpen ? null : key),
+                  style: { background: "rgba(248,113,113,.07)", border: "1px solid rgba(248,113,113,.4)", borderRadius: isOpen ? "12px 12px 0 0" : 12, padding: "14px 18px", cursor: "pointer", display: "flex", alignItems: "center", gap: 14, transition: "all .15s" }
+                },
+                  /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1 } },
+                    /* @__PURE__ */ import_react.default.createElement("div", { style: { fontWeight: 700, fontSize: 14, color: "#e2e8f0" } }, monthLabel(key)),
+                    /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 12, color: "#94a3b8", marginTop: 3 } },
+                      ords.length, " orders × $", RATE_USD, " × ", pkrRate, " PKR = ",
+                      /* @__PURE__ */ import_react.default.createElement("strong", { style: { color: "#fbbf24" } }, "PKR ", fee.toLocaleString(), " due")
+                    )
+                  ),
+                  /* @__PURE__ */ import_react.default.createElement("div", { style: { textAlign: "right" } },
+                    /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 20, fontWeight: 800, color: "#f87171" } }, "PKR ", fee.toLocaleString()),
+                    /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 10, color: "#64748b" } }, ords.length, " orders · PENDING")
+                  ),
+                  /* @__PURE__ */ import_react.default.createElement("button", {
+                    onClick: (e) => { e.stopPropagation(); togglePaid(key); },
+                    style: { padding: "7px 16px", background: "linear-gradient(135deg,#059669,#10b981)", border: "none", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }
+                  }, "✅ Mark Settled"),
+                  /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 12, color: "#475569", transform: isOpen ? "rotate(90deg)" : "rotate(0deg)", display: "inline-block", transition: "transform .2s" } }, "▶")
+                ),
+                /* Expanded detail */
+                isOpen && /* @__PURE__ */ import_react.default.createElement("div", { style: { background: "#0f172a", border: "1px solid rgba(248,113,113,.25)", borderTop: "none", borderRadius: "0 0 12px 12px", padding: "0 18px 16px" } },
+                  /* @__PURE__ */ import_react.default.createElement("div", { style: { paddingTop: 14, marginBottom: 10, fontSize: 12, color: "#64748b" } }, "Order detail for ", monthLabel(key)),
+                  /* @__PURE__ */ import_react.default.createElement("div", { style: { overflowX: "auto" } },
+                    /* @__PURE__ */ import_react.default.createElement("table", { style: { width: "100%", fontSize: 12, borderCollapse: "collapse" } },
+                      /* @__PURE__ */ import_react.default.createElement("thead", null,
+                        /* @__PURE__ */ import_react.default.createElement("tr", { style: { borderBottom: "1px solid #1e3a5f" } },
+                          ["#", "Order ID", "Date", "Dropshipper", "SKU", "Qty", "WH Fee"].map((h) => /* @__PURE__ */ import_react.default.createElement("th", { key: h, style: { padding: "6px 10px", color: "#64748b", textAlign: "left", fontWeight: 600 } }, h))
+                        )
+                      ),
+                      /* @__PURE__ */ import_react.default.createElement("tbody", null,
+                        ords.map((o, i) => /* @__PURE__ */ import_react.default.createElement("tr", { key: o.id, style: { borderBottom: "1px solid #0f172a" } },
+                          /* @__PURE__ */ import_react.default.createElement("td", { style: { padding: "6px 10px", color: "#475569" } }, i + 1),
+                          /* @__PURE__ */ import_react.default.createElement("td", { style: { padding: "6px 10px", fontFamily: "monospace", color: "#38bdf8", fontSize: 11 } }, o.order_number || o.id?.slice(0, 8)),
+                          /* @__PURE__ */ import_react.default.createElement("td", { style: { padding: "6px 10px", color: "#94a3b8" } }, new Date(o.created_at).toLocaleDateString()),
+                          /* @__PURE__ */ import_react.default.createElement("td", { style: { padding: "6px 10px", color: "#cbd5e1" } }, o.dropshipper_name || "—"),
+                          /* @__PURE__ */ import_react.default.createElement("td", { style: { padding: "6px 10px", color: "#cbd5e1" } }, o.sku_name || "—"),
+                          /* @__PURE__ */ import_react.default.createElement("td", { style: { padding: "6px 10px", color: "#e2e8f0", fontWeight: 600 } }, o.quantity || 1),
+                          /* @__PURE__ */ import_react.default.createElement("td", { style: { padding: "6px 10px", color: "#fbbf24", fontWeight: 700 } }, "PKR ", Math.round(RATE_USD * pkrRate).toLocaleString())
+                        ))
+                      ),
+                      /* @__PURE__ */ import_react.default.createElement("tfoot", null,
+                        /* @__PURE__ */ import_react.default.createElement("tr", { style: { borderTop: "2px solid #1e3a5f", background: "rgba(251,191,36,.06)" } },
+                          /* @__PURE__ */ import_react.default.createElement("td", { colSpan: 5, style: { padding: "10px 10px", color: "#fbbf24", fontWeight: 700 } }, "TOTAL — ", ords.length, " orders × $", RATE_USD, " × ", pkrRate),
+                          /* @__PURE__ */ import_react.default.createElement("td", { style: { padding: "10px 10px", color: "#fbbf24", fontWeight: 800, fontSize: 15 } }, ords.reduce((s, o) => s + (o.quantity || 1), 0)),
+                          /* @__PURE__ */ import_react.default.createElement("td", { style: { padding: "10px 10px", color: "#fbbf24", fontWeight: 800, fontSize: 15 } }, "PKR ", fee.toLocaleString())
+                        )
+                      )
+                    )
+                  )
+                )
+              );
+            }),
+
+            /* Settled months */
+            paidMonths.length > 0 && /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 11, color: "#34d399", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, margin: "10px 0 4px" } }, "✅ Settled — No Pending Liabilities"),
+            ...paidMonths.map((key) => {
+              const ords = months[key];
+              const fee  = Math.round(ords.length * RATE_USD * pkrRate);
+              const isOpen = open === key;
+              return /* @__PURE__ */ import_react.default.createElement("div", { key },
+                /* @__PURE__ */ import_react.default.createElement("div", {
+                  onClick: () => setOpen(isOpen ? null : key),
+                  style: { background: "rgba(16,185,129,.06)", border: "1px solid rgba(16,185,129,.3)", borderRadius: isOpen ? "12px 12px 0 0" : 12, padding: "12px 18px", cursor: "pointer", display: "flex", alignItems: "center", gap: 14 }
+                },
+                  /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1 } },
+                    /* @__PURE__ */ import_react.default.createElement("div", { style: { fontWeight: 700, fontSize: 14, color: "#e2e8f0" } }, monthLabel(key)),
+                    /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 12, color: "#64748b", marginTop: 2 } }, ords.length, " orders · PKR ", fee.toLocaleString(), " · Settled ✓")
+                  ),
+                  /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: "#34d399" } }, "✅ SETTLED"),
+                  /* @__PURE__ */ import_react.default.createElement("button", {
+                    onClick: (e) => { e.stopPropagation(); togglePaid(key); },
+                    style: { padding: "5px 12px", background: "transparent", border: "1px solid #374151", borderRadius: 6, color: "#64748b", fontSize: 11, cursor: "pointer" }
+                  }, "Reopen"),
+                  /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 11, color: "#475569", transform: isOpen ? "rotate(90deg)" : "rotate(0deg)", display: "inline-block", transition: "transform .2s" } }, "▶")
+                ),
+                isOpen && /* @__PURE__ */ import_react.default.createElement("div", { style: { background: "#0f172a", border: "1px solid rgba(16,185,129,.2)", borderTop: "none", borderRadius: "0 0 12px 12px", padding: "0 18px 16px" } },
+                  /* @__PURE__ */ import_react.default.createElement("div", { style: { overflowX: "auto", paddingTop: 14 } },
+                    /* @__PURE__ */ import_react.default.createElement("table", { style: { width: "100%", fontSize: 12, borderCollapse: "collapse" } },
+                      /* @__PURE__ */ import_react.default.createElement("thead", null,
+                        /* @__PURE__ */ import_react.default.createElement("tr", { style: { borderBottom: "1px solid #1e3a5f" } },
+                          ["#","Order ID","Date","Dropshipper","SKU","Qty","WH Fee"].map((h) => /* @__PURE__ */ import_react.default.createElement("th", { key: h, style: { padding: "6px 10px", color: "#64748b", textAlign: "left" } }, h))
+                        )
+                      ),
+                      /* @__PURE__ */ import_react.default.createElement("tbody", null,
+                        ords.map((o, i) => /* @__PURE__ */ import_react.default.createElement("tr", { key: o.id, style: { borderBottom: "1px solid #0f172a" } },
+                          /* @__PURE__ */ import_react.default.createElement("td", { style: { padding: "6px 10px", color: "#475569" } }, i + 1),
+                          /* @__PURE__ */ import_react.default.createElement("td", { style: { padding: "6px 10px", fontFamily: "monospace", color: "#38bdf8", fontSize: 11 } }, o.order_number || o.id?.slice(0, 8)),
+                          /* @__PURE__ */ import_react.default.createElement("td", { style: { padding: "6px 10px", color: "#94a3b8" } }, new Date(o.created_at).toLocaleDateString()),
+                          /* @__PURE__ */ import_react.default.createElement("td", { style: { padding: "6px 10px", color: "#cbd5e1" } }, o.dropshipper_name || "—"),
+                          /* @__PURE__ */ import_react.default.createElement("td", { style: { padding: "6px 10px", color: "#cbd5e1" } }, o.sku_name || "—"),
+                          /* @__PURE__ */ import_react.default.createElement("td", { style: { padding: "6px 10px", color: "#e2e8f0" } }, o.quantity || 1),
+                          /* @__PURE__ */ import_react.default.createElement("td", { style: { padding: "6px 10px", color: "#34d399" } }, "PKR ", Math.round(RATE_USD * pkrRate).toLocaleString())
+                        ))
+                      ),
+                      /* @__PURE__ */ import_react.default.createElement("tfoot", null,
+                        /* @__PURE__ */ import_react.default.createElement("tr", { style: { borderTop: "2px solid #1e3a5f" } },
+                          /* @__PURE__ */ import_react.default.createElement("td", { colSpan: 5, style: { padding: "10px", color: "#34d399", fontWeight: 700 } }, "TOTAL"),
+                          /* @__PURE__ */ import_react.default.createElement("td", { style: { padding: "10px", color: "#34d399", fontWeight: 800 } }, ords.reduce((s, o) => s + (o.quantity || 1), 0)),
+                          /* @__PURE__ */ import_react.default.createElement("td", { style: { padding: "10px", color: "#34d399", fontWeight: 800, fontSize: 15 } }, "PKR ", fee.toLocaleString())
+                        )
+                      )
+                    )
+                  )
+                )
+              );
+            })
+          )
+    );
   }
   function MonthlyReport({ user, toast }) {
     const [orders, setOrders] = (0, import_react.useState)([]);
