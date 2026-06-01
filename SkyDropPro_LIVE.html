@@ -1,4 +1,12 @@
-<!DOCTYPE html><html lang="en" dir="ltr"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>SkyDrop Pro â Sky Cart</title></head><body style="margin:0;background:#0f172a"><div id="root"></div><script>(() => {
+<!DOCTYPE html><html lang="en" dir="ltr"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>SkyDrop Pro â Sky Cart</title>
+<style>
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity:.6}
+body.light-mode::before{opacity:.2}
+#root{position:relative;z-index:1}
+</style>
+</head><body style="margin:0;background:#0f172a"><div id="root"></div><script>(() => {
   var __create = Object.create;
   var __defProp = Object.defineProperty;
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -1128,8 +1136,7 @@
               type = type._init;
               try {
                 return getComponentNameFromType(type(innerType));
-              } catch (x) {
-              }
+              } catch (x) { console.error("SkyDrop error:", x); }
           }
         return null;
       }
@@ -1362,8 +1369,7 @@
         if (injectedHook && "function" === typeof injectedHook.setStrictMode)
           try {
             injectedHook.setStrictMode(rendererID, newIsStrictMode);
-          } catch (err) {
-          }
+          } catch (err) { console.error("SkyDrop error:", err); }
       }
       var clz32 = Math.clz32 ? Math.clz32 : clz32Fallback;
       var log = Math.log;
@@ -5002,8 +5008,7 @@
               update.eagerState = eagerState;
               if (objectIs(eagerState, currentState))
                 return enqueueUpdate$1(fiber, queue, update, 0), null === workInProgressRoot && finishQueueingConcurrentUpdates(), false;
-            } catch (error) {
-            } finally {
+            } catch (error) { console.error("SkyDrop error:", error); } finally {
             }
           action = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
           if (null !== action)
@@ -7574,8 +7579,7 @@
         if (injectedHook && "function" === typeof injectedHook.onCommitFiberUnmount)
           try {
             injectedHook.onCommitFiberUnmount(rendererID, deletedFiber);
-          } catch (err) {
-          }
+          } catch (err) { console.error("SkyDrop error:", err); }
         switch (deletedFiber.tag) {
           case 26:
             offscreenSubtreeWasHidden || safelyDetachRef(deletedFiber, nearestMountedAncestor);
@@ -9489,8 +9493,7 @@
                 void 0,
                 128 === (finishedWork.current.flags & 128)
               );
-            } catch (err) {
-            }
+            } catch (err) { console.error("SkyDrop error:", err); }
           if (null !== recoverableErrors) {
             finishedWork = ReactSharedInternals.T;
             remainingLanes = ReactDOMSharedInternals.p;
@@ -9552,8 +9555,7 @@
           if (injectedHook && "function" === typeof injectedHook.onPostCommitFiberRoot)
             try {
               injectedHook.onPostCommitFiberRoot(rendererID, root$jscomp$0);
-            } catch (err) {
-            }
+            } catch (err) { console.error("SkyDrop error:", err); }
           return true;
         } finally {
           ReactDOMSharedInternals.p = previousPriority, ReactSharedInternals.T = prevTransition, releaseRootPooledCache(root2, remainingLanes);
@@ -12616,8 +12618,7 @@
             rendererID = hook$jscomp$inline_2348.inject(
               internals$jscomp$inline_2347
             ), injectedHook = hook$jscomp$inline_2348;
-          } catch (err) {
-          }
+          } catch (err) { console.error("SkyDrop error:", err); }
       }
       var hook$jscomp$inline_2348;
       exports.createRoot = function(container, options2) {
@@ -12969,8 +12970,7 @@ textarea{resize:vertical;min-height:80px}
       }
       try {
         await sbFetch(`/rest/v1/skus?id=eq.${skuId}`, { method: "PATCH", body: JSON.stringify({ likes: newCount, liked_by: newLikedBy }) });
-      } catch (e2) {
-      }
+      } catch (e2) { console.error("SkyDrop error:", e2); }
     }
     const rays = Array.from({ length: 8 }, (_, i) => i);
     return /* @__PURE__ */ import_react.default.createElement("button", { className: "heart-btn", onClick: toggle, title: count + " likes" }, /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "relative", display: "inline-flex", alignItems: "center", gap: 3 } }, burst && rays.map((i) => /* @__PURE__ */ import_react.default.createElement("div", { key: i, style: {
@@ -13886,7 +13886,7 @@ textarea{resize:vertical;min-height:80px}
           setInv(invData);
           setProfiles(profData.map((p) => {
             let proof = { submitted: false, files: [] };
-            try { const parsed = JSON.parse(p.payment_screenshots || "null"); if (Array.isArray(parsed)) proof = { submitted: false, files: parsed }; else if (parsed) proof = { submitted: false, files: [], ...parsed }; } catch (e) {}
+            try { const parsed = JSON.parse(p.payment_screenshots || "null"); if (Array.isArray(parsed)) proof = { submitted: false, files: parsed }; else if (parsed) proof = { submitted: false, files: [], ...parsed }; } catch (e) { console.error("SkyDrop error:", e); }
             return { ...p, proof };
           }));
         } catch (e) { toast(e.message, "error"); }
@@ -14153,8 +14153,7 @@ textarea{resize:vertical;min-height:80px}
       let current = [];
       try {
         current = JSON.parse(existing?.shipping_label || "[]");
-      } catch (e) {
-      }
+      } catch (e) { console.error("SkyDrop error:", e); }
       const newItems = await Promise.all(Array.from(files).slice(0, 5 - current.length).map((f) => new Promise((res) => {
         const r = new FileReader();
         r.onload = (e) => res({ name: f.name, data: e.target.result });
@@ -14213,7 +14212,7 @@ textarea{resize:vertical;min-height:80px}
               const parsed = JSON.parse(p.payment_screenshots);
               if (Array.isArray(parsed)) setProof({ submitted: false, submitted_at: null, files: parsed });
               else if (parsed && typeof parsed === "object") setProof({ submitted: false, submitted_at: null, files: [], ...parsed });
-            } catch (e) {}
+            } catch (e) { console.error("SkyDrop error:", e); }
           }
         } catch (e) { toast(e.message, "error"); }
         setLd(false);
@@ -14292,8 +14291,7 @@ textarea{resize:vertical;min-height:80px}
       (async () => {
         try {
           setReqs(await sbFetch(`/rest/v1/sku_requests?proposed_by=eq.${user.id}&select=*&order=created_at.desc`));
-        } catch (e) {
-        }
+        } catch (e) { console.error("SkyDrop error:", e); }
       })();
     }, []);
     async function submit() {
@@ -14443,7 +14441,33 @@ textarea{resize:vertical;min-height:80px}
         w.location.href = url;
         setTimeout(() => w.print(), 1e3);
       } else {
-        w.document.write(`<html><body style="margin:0"><img src="${labelData}" style="max-width:100%"/></body></html>`);
+        w.document.write(`<html><body style="margin:0"><img src="${labelData}" style="max-width:100%"/>
+<script>
+(function(){
+  // Favicon
+  var link = document.createElement('link');
+  link.rel = 'icon';
+  link.type = 'image/svg+xml';
+  link.href = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 66 76'%3E%3Cpolygon points='33,2 61,22 33,70 5,22' fill='%230c4a6e'/%3E%3Cpolygon points='33,10 55,24 33,60 11,24' fill='%230369a1'/%3E%3Cpolygon points='33,18 47,26 33,50 19,26' fill='%230ea5e9'/%3E%3Ctext x='33' y='32' font-family='sans-serif' font-size='16' font-weight='900' fill='%23fff' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E";
+  document.head.appendChild(link);
+
+  // Theme toggle button
+  var btn = document.createElement('button');
+  btn.id = 'theme-toggle';
+  btn.title = 'Toggle light/dark mode';
+  var isLight = localStorage.getItem('skyDrop_theme') === 'light';
+  if(isLight){ document.body.classList.add('light-mode'); }
+  btn.innerHTML = isLight ? '&#9728;&#65039;' : '&#127769;';
+  btn.onclick = function(){
+    isLight = !isLight;
+    document.body.classList.toggle('light-mode', isLight);
+    btn.innerHTML = isLight ? '&#9728;&#65039;' : '&#127769;';
+    localStorage.setItem('skyDrop_theme', isLight ? 'light' : 'dark');
+  };
+  document.body.appendChild(btn);
+})();
+</script>
+</body></html>`);
       }
       w.document.close();
       setTimeout(() => w.print(), 500);
@@ -14510,7 +14534,7 @@ textarea{resize:vertical;min-height:80px}
       (async () => {
         try {
           setOrders(await sbFetch("/rest/v1/orders?select=id,order_number,created_at,status,quantity,dropshipper_name,sku_name&order=created_at.desc"));
-          try { setPaid(JSON.parse(localStorage.getItem("wh_paid") || "{}")); } catch (e) {}
+          try { setPaid(JSON.parse(localStorage.getItem("wh_paid") || "{}")); } catch (e) { console.error("SkyDrop error:", e); }
         } catch (e) { toast(e.message, "error"); }
         setLd(false);
       })();
@@ -15174,7 +15198,26 @@ textarea{resize:vertical;min-height:80px}
       busy ? "Saving..." : "Save New Password"
     ))));
   }
-  function App() {
+  class ErrorBoundary extends import_react.default.Component {
+    constructor(props) {
+      super(props);
+      this.state = { hasError: false, error: null };
+    }
+    static getDerivedStateFromError(error) { return { hasError: true, error }; }
+    componentDidCatch(error, info) { console.error("SkyDrop Pro Error:", error, info); }
+    render() {
+      if (this.state.hasError) {
+        return import_react.default.createElement("div", { style: { minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#0f172a", gap: 20, padding: 24 } },
+          import_react.default.createElement("div", { style: { fontSize: 56 } }, "\u26A0\uFE0F"),
+          import_react.default.createElement("div", { style: { fontSize: 24, fontWeight: 800, color: "#f87171", fontFamily: "'Plus Jakarta Sans',sans-serif" } }, "Something went wrong"),
+          import_react.default.createElement("div", { style: { fontSize: 13, color: "#64748b", maxWidth: 420, textAlign: "center", lineHeight: 1.7 } }, this.state.error?.message || "An unexpected error occurred. Please refresh the page to continue."),
+          import_react.default.createElement("button", { onClick: () => window.location.reload(), style: { background: "#0284c7", color: "#fff", border: "none", borderRadius: 10, padding: "12px 32px", fontSize: 14, cursor: "pointer", fontWeight: 700 } }, "\u21BA Reload App")
+        );
+      }
+      return this.props.children;
+    }
+  }
+    function App() {
     const [user, setUser] = (0, import_react.useState)(null);
     const [page, setPage] = (0, import_react.useState)("dashboard");
     const [appLoading, setAppLoading] = (0, import_react.useState)(true);
@@ -15232,8 +15275,7 @@ textarea{resize:vertical;min-height:80px}
             sbFetch("/rest/v1/skus?stock=lt.10&select=id")
           ]);
           setBadges({ pend_users: pu.length, anomalies: an.length, sku_req: sr.length + (ls || []).length });
-        } catch (e) {
-        }
+        } catch (e) { console.error("SkyDrop error:", e); }
       })();
     }, [user]);
     function logout() {
@@ -15291,9 +15333,9 @@ textarea{resize:vertical;min-height:80px}
     }
     const pageLabel = NAV[user.role]?.find((n) => n.id === page)?.label || "Dashboard";
     const roleColors = { admin: "#dbeafe", dropshipper: "#d1fae5", warehouse: "#ede9fe", supplier: "#fef3c7" };
-    return /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("style", null, CSS), /* @__PURE__ */ import_react.default.createElement(Toasts, { list: toasts }), showWelcome && user && /* @__PURE__ */ import_react.default.createElement(WelcomeModal, { user, onClose: () => setShowWelcome(false) }), /* @__PURE__ */ import_react.default.createElement(ChatBot, { user }), /* @__PURE__ */ import_react.default.createElement("div", { className: "app" }, /* @__PURE__ */ import_react.default.createElement(Sidebar, { user, page, setPage, badges, onLogout: logout }), /* @__PURE__ */ import_react.default.createElement("div", { className: "main" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "topbar" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "topbar-title" }, "SkyDrop Pro \u2014 ", pageLabel), /* @__PURE__ */ import_react.default.createElement("div", { className: "flex gap-2 items-center" }, (user.role === "dropshipper" || user.role === "admin") && /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 15, fontWeight: 800, background: "linear-gradient(90deg,#f59e0b,#fbbf24,#f59e0b)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", letterSpacing: 0.3 } }, "Hi, ", user.name || user.email?.split("@")[0], " \u{1F44B}"), /* @__PURE__ */ import_react.default.createElement("span", { className: "badge", style: { background: roleColors[user.role] || "#0f172a", color: "#e2e8f0", border: "1px solid #334155", fontSize: 11, textTransform: "capitalize" } }, user.role))), /* @__PURE__ */ import_react.default.createElement("div", { className: "content" }, renderPage()))));
+    return /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("style", null, CSS), /* @__PURE__ */ import_react.default.createElement(Toasts, { list: toasts }), showWelcome && user && /* @__PURE__ */ import_react.default.createElement(WelcomeModal, { user, onClose: () => setShowWelcome(false) }), /* @__PURE__ */ import_react.default.createElement(ChatBot, { user }), /* @__PURE__ */ import_react.default.createElement("div", { className: "app" }, /* @__PURE__ */ import_react.default.createElement(Sidebar, { user, page, setPage, badges, onLogout: logout }), /* @__PURE__ */ import_react.default.createElement("div", { className: "main" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "topbar" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "topbar-title" }, "SkyDrop Pro \u2014 ", pageLabel), /* @__PURE__ */ import_react.default.createElement("div", { className: "flex gap-2 items-center" }, (user.role === "dropshipper" || user.role === "admin") && /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 15, fontWeight: 800, background: "linear-gradient(90deg,#f59e0b,#fbbf24,#f59e0b)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", letterSpacing: 0.3 } }, "Hi, ", user.name || user.email?.split("@")[0], " \u{1F44B}"), /* @__PURE__ */ import_react.default.createElement("span", { className: "badge", style: { background: roleColors[user.role] || "#0f172a", color: "#e2e8f0", border: "1px solid #334155", fontSize: 11, textTransform: "capitalize" } }, user.role))), /* @__PURE__ */ import_react.default.createElement("div", { className: "content", key: page }, renderPage()))));
   }
-  import_client.default.createRoot(document.getElementById("root")).render(/* @__PURE__ */ import_react.default.createElement(App, null));
+  import_client.default.createRoot(document.getElementById("root")).render(/* @__PURE__ */ import_react.default.createElement(ErrorBoundary, null, /* @__PURE__ */ import_react.default.createElement(App, null)));
 })();
 /*! Bundled license information:
 
