@@ -13685,6 +13685,189 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
     const [ld, setLd] = (0, import_react.useState)(true);
     const blankSku = { name: "", sku_prefix: "EP", cost_price: "", retail_price: "", wh_fee: "1.5", stock: "", category: "Embroidered Patches", description: "", variations: [], warehouse: "Ahsan Aslam \u2014 USA", supplier_id: "", supplier_name: "" };
     const [showAdd, setShowAdd] = (0, import_react.useState)(false);
+    const [showCsv, setShowCsv] = (0, import_react.useState)(false);
+    const [csvRows, setCsvRows] = (0, import_react.useState)([]);
+    const [csvUploading, setCsvUploading] = (0, import_react.useState)(false);
+    const [csvDone, setCsvDone] = (0, import_react.useState)({ ok: 0, err: 0, skip: 0 });
+    const [csvLog, setCsvLog] = (0, import_react.useState)([]);
+    const [csvProgress, setCsvProgress] = (0, import_react.useState)(0);
+    function csvLog_add(msg, type) { setCsvLog(p => [...p, { msg, type }]); }
+    function parseSkuPrefixFromCode(code) {
+      if (!code) return "EP";
+      const m = code.match(/^([A-Za-z]+)/);
+      return m ? m[1].toUpperCase() : "EP";
+    }
+    function parsePkr(val) {
+      if (!val) return 0;
+      const v = String(val).replace(/[^0-9.,]/g,"").replace(/,/g,"");
+      return parseFloat(v) || 0;
+    }
+    function parseCsvFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const text = ev.target.result;
+        const lines = text.split(/\r?\n/);
+        if (lines.length < 2) { toast("CSV file appears empty", "error"); return; }
+
+        // ── STEP 1: Find header row (first row with meaningful column names) ──
+        let headerIdx = -1;
+        let rawHeaders = [];
+        for (let i = 0; i < Math.min(5, lines.length); i++) {
+          const cells = lines[i].split(",").map(c => c.replace(/^"|"$/g,"").trim().toLowerCase());
+          // Detect header by presence of known column names
+          if (cells.some(c => c === "sku" || c === "product_name" || c === "name" || c === "namae" || c === "sku code")) {
+            headerIdx = i;
+            rawHeaders = cells;
+            break;
+          }
+        }
+
+        // ── STEP 2: Map column names to indices ──
+        const col = {};
+        if (headerIdx >= 0) {
+          rawHeaders.forEach((h, i) => {
+            // Name
+            if (!col.name && (h === "product_name" || h === "name" || h === "namae" || h === "product name" || h === " namae")) col.name = i;
+            // SKU ref
+            if (!col.sku && (h === "sku" || h === "sku code" || h === "sku_code")) col.sku = i;
+            // Prefix
+            if (!col.prefix && (h === "sku_prefix" || h === "prefix")) col.prefix = i;
+            // Cost
+            if (!col.cost && (h === "cost_price_pkr" || h === "cost_price" || h === "cost")) col.cost = i;
+            // Retail / PKR price
+            if (!col.retail && (h === "retail_price_pkr" || h === "retail_price" || h.includes("price pkr") || h === "price pkr")) col.retail = i;
+            // USD price (fallback)
+            if (!col.usd && (h.includes("price usd") || h === "usd" || h === "price usd")) col.usd = i;
+            // WH Fee
+            if (!col.whfee && (h === "wh_fee" || h === "wh fee" || h === "warehouse_fee")) col.whfee = i;
+            // Stock
+            if (!col.stock && (h === "initial_stock" || h === "stock" || h === "avaiable" || h === "available" || h === "qty")) col.stock = i;
+            // Category
+            if (!col.cat && (h === "category")) col.cat = i;
+            // Warehouse
+            if (!col.wh && (h === "warehouse_location" || h === "warehouse")) col.wh = i;
+            // Variations / Size
+            if (!col.size && (h === "variations" || h === "size")) col.size = i;
+            // Description
+            if (!col.desc && (h === "description" || h === "desc")) col.desc = i;
+            // Status
+            if (!col.status && h === "status") col.status = i;
+          });
+        } else {
+          // Fallback: hardcoded for original stock sheet (57-col format)
+          headerIdx = 1;
+          col.sku = 1; col.name = 2; col.size = 3; col.stock = 52; col.usd = 54; col.retail = 55; col.status = 56;
+        }
+
+        // ── STEP 3: Parse data rows ──
+        const dataLines = lines.slice(headerIdx + 1);
+        const counters = {};
+        const existingMax = skus.reduce((mx, s) => {
+          const m2 = s.sku_code?.match(/(\d+)$/);
+          return m2 ? Math.max(mx, parseInt(m2[1])) : mx;
+        }, 0);
+
+        function getCell(cells, idx) { return (idx != null && idx >= 0 && idx < cells.length) ? cells[idx].replace(/^"|"$/g,"").trim() : ""; }
+        function parseNum(v) { const n = parseFloat(String(v).replace(/[^0-9.]/g,"")); return isNaN(n) ? 0 : n; }
+
+        const parsed = [];
+        for (const line of dataLines) {
+          if (!line.trim()) continue;
+          const cells = line.split(",");
+          const name    = getCell(cells, col.name);
+          const origSku = getCell(cells, col.sku);
+          if (!name || name.toLowerCase() === "namae" || name.toLowerCase() === "name" || name.toLowerCase() === "product_name") continue;
+          if (!origSku || origSku.toLowerCase() === "sku" || origSku.toLowerCase() === "link") continue;
+
+          const prefix   = getCell(cells, col.prefix) || parseSkuPrefixFromCode(origSku);
+          const costRaw  = parseNum(getCell(cells, col.cost));
+          const retailRaw= parseNum(getCell(cells, col.retail));
+          const usdRaw   = parseNum(getCell(cells, col.usd));
+          const whRaw    = parseNum(getCell(cells, col.whfee));
+          const stockN   = parseInt(String(parseNum(getCell(cells, col.stock)))) || 0;
+          const catVal   = getCell(cells, col.cat)  || "Embroidered Patches";
+          const whLoc    = getCell(cells, col.wh)   || "Ahsan Aslam — USA";
+          const sizeVal  = getCell(cells, col.size) || "";
+          const descVal  = getCell(cells, col.desc) || "";
+          const stVal    = getCell(cells, col.status) || "active";
+
+          // ── PRICING LOGIC ──
+          // cost_price_pkr empty → retail_price_pkr IS the cost → add +50 markup
+          let costPkr, retailPkr;
+          if (costRaw > 0) {
+            costPkr   = costRaw;
+            retailPkr = retailRaw > 0 ? retailRaw : costRaw + 50;
+          } else if (retailRaw > 0) {
+            costPkr   = retailRaw;         // retail_price_pkr column = cost in this CSV
+            retailPkr = costPkr + 50;
+          } else if (usdRaw > 0) {
+            costPkr   = Math.round(usdRaw * 278);
+            retailPkr = costPkr + 50;
+          } else {
+            costPkr = 0; retailPkr = 50;
+          }
+
+          // WH fee: if value is <=10 treat as USD → convert, else treat as PKR already
+          const whFee = whRaw > 0 ? (whRaw <= 10 ? Math.round(whRaw * 278) : Math.round(whRaw)) : 417;
+
+          // SKU generation
+          const initials = name.trim().split(/\s+/).map(w => (w.replace(/[^a-zA-Z0-9]/g,"")[0] || "").toUpperCase()).join("").replace(/[^A-Z0-9]/g,"").slice(0,4);
+          const fullPfx = (prefix.replace(/[^A-Z0-9]/gi,"").toUpperCase() + initials).replace(/[^A-Z0-9]/g,"");
+          counters[fullPfx] = (counters[fullPfx] || 0) + 1;
+          const newSku = fullPfx + "-" + String(counters[fullPfx]).padStart(2,"0");
+
+          const status = stVal.toLowerCase().includes("out") ? "inactive" : "active";
+          const desc = [sizeVal && "Size: " + sizeVal, descVal || "Premium quality product", "Orig ref: " + origSku, "Details: SkyDrop_Product_Catalog.docx"].filter(Boolean).join(" | ");
+
+          parsed.push({ sku_code: newSku, orig_sku: origSku, name, size: sizeVal, description: desc,
+            cost_price: costPkr, retail_price: retailPkr, wh_fee: whFee,
+            stock: stockN, status, category: catVal, warehouse: whLoc, variations: [] });
+        }
+
+        setCsvRows(parsed);
+        setCsvLog([{ msg: "✅ Parsed " + parsed.length + " products. Cost column empty → used retail_price_pkr as cost + RS50 markup. WH fee → converted to PKR. Review preview below.", type: "info" }]);
+        setCsvDone({ ok: 0, err: 0, skip: 0 });
+        setCsvProgress(0);
+      };
+      reader.readAsText(file);
+    }
+    async function uploadCsvRows() {
+      if (csvRows.length === 0) return;
+      setCsvUploading(true);
+      let ok = 0, err = 0, skip = 0;
+      for (let i = 0; i < csvRows.length; i++) {
+        const p = csvRows[i];
+        setCsvProgress(Math.round((i + 1) / csvRows.length * 100));
+        try {
+          const existing = await sbFetch("/rest/v1/skus?sku_code=eq." + encodeURIComponent(p.sku_code) + "&select=id");
+          if (existing && existing.length > 0) {
+            csvLog_add("[SKIP] " + p.sku_code + " already exists", "warn");
+            skip++;
+            continue;
+          }
+          await sbFetch("/rest/v1/skus", { method: "POST", body: JSON.stringify({
+            sku_code: p.sku_code, name: p.name, description: p.description,
+            cost_price: p.cost_price, retail_price: p.retail_price, wh_fee: p.wh_fee,
+            stock: p.stock, status: p.status, category: p.category,
+            warehouse: p.warehouse, variations: p.variations || []
+          }) });
+          csvLog_add("[OK] " + p.sku_code + " — " + p.name, "ok");
+          ok++;
+        } catch(e2) {
+          csvLog_add("[ERR] " + p.sku_code + " — " + e2.message, "err");
+          err++;
+        }
+        await new Promise(r => setTimeout(r, 80));
+      }
+      setCsvDone({ ok, err, skip });
+      setCsvUploading(false);
+      if (ok > 0) {
+        try { setSkus(await sbFetch("/rest/v1/skus?select=*&order=created_at.desc")); } catch(e2) {}
+        toast("\u2705 CSV import done: " + ok + " added, " + skip + " skipped, " + err + " errors", ok > 0 ? "success" : "error");
+      }
+    }
     const [f, setF] = (0, import_react.useState)(blankSku);
     const [nextNum, setNextNum] = (0, import_react.useState)(1);
     const upd = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }));
@@ -13739,10 +13922,88 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
       }
     }
     const margin = (f2) => (f2.retail_price || 0) + (f2.wh_fee || 0) - (f2.cost_price || 0);
-    return /* @__PURE__ */ import_react.default.createElement("div", null, !readOnly && /* @__PURE__ */ import_react.default.createElement("div", { className: "section-header" }, /* @__PURE__ */ import_react.default.createElement("h2", { style: { fontSize: 16, fontWeight: 700, color: "#1e3a5f" } }, "Inventory (", skus.length, " SKUs)"), /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-primary", onClick: () => {
+    return /* @__PURE__ */ import_react.default.createElement("div", null,
+    showCsv && /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 } },
+      /* @__PURE__ */ import_react.default.createElement("div", { style: { background: "#1e293b", border: "1px solid #334155", borderRadius: 16, width: "100%", maxWidth: 720, maxHeight: "90vh", display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "0 25px 60px rgba(0,0,0,.6)" } },
+        /* @__PURE__ */ import_react.default.createElement("div", { style: { background: "linear-gradient(135deg,#0c2d4a,#0369a1)", padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 } },
+          /* @__PURE__ */ import_react.default.createElement("div", null,
+            /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 16, fontWeight: 800, color: "#e2e8f0" } }, "\u{1F4C2} CSV Bulk Import"),
+            /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 12, color: "#7dd3fc", marginTop: 2 } }, csvRows.length + " products parsed — Cost + RS50 markup, WH Fee RS417")
+          ),
+          /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => { if (!csvUploading) setShowCsv(false); }, style: { background: "rgba(255,255,255,.15)", border: "none", borderRadius: 6, padding: "4px 10px", color: "#fff", cursor: "pointer", fontSize: 14 } }, "\u2715")
+        ),
+        csvUploading && /* @__PURE__ */ import_react.default.createElement("div", { style: { padding: "8px 20px", background: "#0f172a", flexShrink: 0 } },
+          /* @__PURE__ */ import_react.default.createElement("div", { style: { height: 6, background: "#334155", borderRadius: 99, overflow: "hidden" } },
+            /* @__PURE__ */ import_react.default.createElement("div", { style: { height: "100%", width: csvProgress + "%", background: "linear-gradient(90deg,#0369a1,#38bdf8)", borderRadius: 99, transition: "width .3s" } })
+          ),
+          /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 11, color: "#64748b", marginTop: 4 } }, csvProgress + "% — uploading...")
+        ),
+        /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "16px 20px" } },
+          csvLog.length > 0 && /* @__PURE__ */ import_react.default.createElement("div", { style: { background: "#0f172a", border: "1px solid #1e293b", borderRadius: 8, padding: "10px 12px", maxHeight: 140, overflowY: "auto", fontFamily: "monospace", fontSize: 11, marginBottom: 12 } },
+            csvLog.map((l, i) => /* @__PURE__ */ import_react.default.createElement("div", { key: i, style: { color: l.type === "ok" ? "#34d399" : l.type === "err" ? "#f87171" : l.type === "warn" ? "#fbbf24" : "#38bdf8", lineHeight: 1.7 } }, l.msg))
+          ),
+          !csvUploading && csvDone.ok + csvDone.err === 0 && csvRows.length > 0 && /* @__PURE__ */ import_react.default.createElement("div", { style: { overflowX: "auto" } },
+            /* @__PURE__ */ import_react.default.createElement("table", null,
+              /* @__PURE__ */ import_react.default.createElement("thead", null,
+                /* @__PURE__ */ import_react.default.createElement("tr", null,
+                  /* @__PURE__ */ import_react.default.createElement("th", null, "New SKU"),
+                  /* @__PURE__ */ import_react.default.createElement("th", null, "Name"),
+                  /* @__PURE__ */ import_react.default.createElement("th", null, "Size"),
+                  /* @__PURE__ */ import_react.default.createElement("th", null, "Stock"),
+                  /* @__PURE__ */ import_react.default.createElement("th", null, "Cost(RS)"),
+                  /* @__PURE__ */ import_react.default.createElement("th", null, "Retail(RS)"),
+                  /* @__PURE__ */ import_react.default.createElement("th", null, "WH Fee"),
+                  /* @__PURE__ */ import_react.default.createElement("th", null, "Status")
+                )
+              ),
+              /* @__PURE__ */ import_react.default.createElement("tbody", null,
+                csvRows.slice(0, 30).map((r, i) => /* @__PURE__ */ import_react.default.createElement("tr", { key: i },
+                  /* @__PURE__ */ import_react.default.createElement("td", { style: { fontFamily: "monospace", color: "#38bdf8", fontWeight: 700, fontSize: 11 } }, r.sku_code),
+                  /* @__PURE__ */ import_react.default.createElement("td", { style: { fontWeight: 600 } }, r.name),
+                  /* @__PURE__ */ import_react.default.createElement("td", { style: { color: "#64748b", fontSize: 11 } }, r.size || "—"),
+                  /* @__PURE__ */ import_react.default.createElement("td", { style: { textAlign: "center", color: r.stock === 0 ? "#f87171" : "#34d399", fontWeight: 700 } }, r.stock),
+                  /* @__PURE__ */ import_react.default.createElement("td", { style: { textAlign: "right" } }, r.cost_price),
+                  /* @__PURE__ */ import_react.default.createElement("td", { style: { textAlign: "right", color: "#34d399", fontWeight: 700 } }, r.retail_price),
+                  /* @__PURE__ */ import_react.default.createElement("td", { style: { textAlign: "right", color: "#38bdf8" } }, "417"),
+                  /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement("span", { style: { padding: "2px 8px", borderRadius: 99, fontSize: 10, fontWeight: 700, background: r.status === "active" ? "rgba(5,150,105,.2)" : "rgba(220,38,38,.2)", color: r.status === "active" ? "#34d399" : "#f87171" } }, r.status))
+                )),
+                csvRows.length > 30 && /* @__PURE__ */ import_react.default.createElement("tr", null,
+                  /* @__PURE__ */ import_react.default.createElement("td", { colSpan: 8, style: { textAlign: "center", color: "#64748b", fontSize: 12, padding: "8px" } }, "... and " + (csvRows.length - 30) + " more products")
+                )
+              )
+            )
+          ),
+          csvDone.ok + csvDone.err + csvDone.skip > 0 && /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginTop: 8 } },
+            [["\u2705 Imported", csvDone.ok, "#34d399"], ["\u23ED Skipped", csvDone.skip, "#fbbf24"], ["\u274C Errors", csvDone.err, "#f87171"]].map(([l, v, c]) =>
+              /* @__PURE__ */ import_react.default.createElement("div", { key: l, style: { background: "#0f172a", borderRadius: 10, padding: "14px", textAlign: "center" } },
+                /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 28, fontWeight: 800, color: c } }, v),
+                /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 11, color: "#64748b", marginTop: 2 } }, l)
+              )
+            )
+          )
+        ),
+        /* @__PURE__ */ import_react.default.createElement("div", { style: { padding: "14px 20px", borderTop: "1px solid #334155", display: "flex", gap: 10, flexShrink: 0 } },
+          csvDone.ok === 0 && !csvUploading && /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-success", style: { flex: 1, justifyContent: "center" }, onClick: uploadCsvRows, disabled: csvRows.length === 0 || csvUploading },
+            "\u{1F4E4} Upload All " + csvRows.length + " Products to SkyDrop"
+          ),
+          csvDone.ok > 0 && /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-primary", style: { flex: 1, justifyContent: "center" }, onClick: () => setShowCsv(false) }, "\u2713 Done — Close"),
+          /* @__PURE__ */ import_react.default.createElement("label", { style: { display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "1px solid #475569", color: "#94a3b8", background: "transparent" } },
+            "\u{1F504} New CSV",
+            /* @__PURE__ */ import_react.default.createElement("input", { type: "file", accept: ".csv", style: { display: "none" }, onChange: (e) => { parseCsvFile(e); e.target.value = ""; } })
+          )
+        )
+      )
+    ),
+    !readOnly && /* @__PURE__ */ import_react.default.createElement("div", { className: "section-header" }, /* @__PURE__ */ import_react.default.createElement("h2", { style: { fontSize: 16, fontWeight: 700, color: "#1e3a5f" } }, "Inventory (", skus.length, " SKUs)"), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 8 } },
+      /* @__PURE__ */ import_react.default.createElement("label", { style: { display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "linear-gradient(135deg,#059669,#10b981)", color: "#fff", transition: "all .2s" } },
+        "\u{1F4C2} Upload CSV",
+        /* @__PURE__ */ import_react.default.createElement("input", { type: "file", accept: ".csv", style: { display: "none" }, onChange: (e) => { parseCsvFile(e); setShowCsv(true); e.target.value = ""; } })
+      ),
+      /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-primary", onClick: () => {
       setF(blankSku);
       setShowAdd(true);
-    } }, "+ Add SKU")), ld ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "Loading...") : /* @__PURE__ */ import_react.default.createElement("div", { className: "card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "table-wrap" }, /* @__PURE__ */ import_react.default.createElement("table", null, /* @__PURE__ */ import_react.default.createElement("thead", null, /* @__PURE__ */ import_react.default.createElement("tr", null, /* @__PURE__ */ import_react.default.createElement("th", null, "SKU Code"), /* @__PURE__ */ import_react.default.createElement("th", null, "Product"), /* @__PURE__ */ import_react.default.createElement("th", null, "Category"), /* @__PURE__ */ import_react.default.createElement("th", null, "Supplier"), /* @__PURE__ */ import_react.default.createElement("th", null, "Warehouse"), /* @__PURE__ */ import_react.default.createElement("th", null, "Cost"), /* @__PURE__ */ import_react.default.createElement("th", null, "Retail"), /* @__PURE__ */ import_react.default.createElement("th", null, "WH Fee"), /* @__PURE__ */ import_react.default.createElement("th", null, "Profit/Unit"), /* @__PURE__ */ import_react.default.createElement("th", null, "Stock"), /* @__PURE__ */ import_react.default.createElement("th", null, "Status"), !readOnly && /* @__PURE__ */ import_react.default.createElement("th", null, "Remove"))), /* @__PURE__ */ import_react.default.createElement("tbody", null, skus.map((s) => {
+    } }, "+ Add SKU")
+    )), ld ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "Loading...") : /* @__PURE__ */ import_react.default.createElement("div", { className: "card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "table-wrap" }, /* @__PURE__ */ import_react.default.createElement("table", null, /* @__PURE__ */ import_react.default.createElement("thead", null, /* @__PURE__ */ import_react.default.createElement("tr", null, /* @__PURE__ */ import_react.default.createElement("th", null, "SKU Code"), /* @__PURE__ */ import_react.default.createElement("th", null, "Product"), /* @__PURE__ */ import_react.default.createElement("th", null, "Category"), /* @__PURE__ */ import_react.default.createElement("th", null, "Supplier"), /* @__PURE__ */ import_react.default.createElement("th", null, "Warehouse"), /* @__PURE__ */ import_react.default.createElement("th", null, "Cost"), /* @__PURE__ */ import_react.default.createElement("th", null, "Retail"), /* @__PURE__ */ import_react.default.createElement("th", null, "WH Fee"), /* @__PURE__ */ import_react.default.createElement("th", null, "Profit/Unit"), /* @__PURE__ */ import_react.default.createElement("th", null, "Stock"), /* @__PURE__ */ import_react.default.createElement("th", null, "Status"), !readOnly && /* @__PURE__ */ import_react.default.createElement("th", null, "Remove"))), /* @__PURE__ */ import_react.default.createElement("tbody", null, skus.map((s) => {
       const m = (s.retail_price || 0) + (s.wh_fee || 0) - (s.cost_price || 0);
       return /* @__PURE__ */ import_react.default.createElement("tr", { key: s.id }, /* @__PURE__ */ import_react.default.createElement("td", { style: { fontFamily: "monospace" } }, s.sku_code), /* @__PURE__ */ import_react.default.createElement("td", { style: { display: "flex", alignItems: "center", gap: 6 } }, s.name, /* @__PURE__ */ import_react.default.createElement(HeartButton, { skuId: s.id, initialLikes: s.likes || 0, likedBy: s.liked_by || [], userId: "admin" })), /* @__PURE__ */ import_react.default.createElement("td", null, s.category), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11, color: "#7dd3fc" } }, s.supplier_name || "\u2014"), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11 } }, s.warehouse || "Ahsan Aslam \u2014 USA"), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (s.cost_price || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (s.retail_price || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (s.wh_fee || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", { style: { color: m > 0 ? "#059669" : "#dc2626", fontWeight: 600 } }, "PKR ", m.toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement("span", { style: { color: s.stock < 10 ? "#dc2626" : "#059669", fontWeight: 600 } }, s.stock), s.stock < 10 && /* @__PURE__ */ import_react.default.createElement("span", { className: "badge bg-red", style: { marginLeft: 4, fontSize: 10 } }, "Low")), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement(Badge, { status: s.status || "active" })), !readOnly && /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-danger btn-xs", onClick: () => removeSku(s.id) }, "\u2715 Remove")));
     }))))), showAdd && /* @__PURE__ */ import_react.default.createElement(
