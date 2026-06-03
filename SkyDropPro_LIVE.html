@@ -13162,8 +13162,10 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
       {
         group: "Inventory", icon: "\u{1F5C3}\uFE0F",
         children: [
-          { id: "inventory",    icon: "\u{1F5C3}\uFE0F", label: "Products & Stock" },
-          { id: "sku_requests", icon: "\u{1F4CB}",         label: "SKU Requests",  bkey: "sku_req" }
+          { id: "inventory",     icon: "\u{1F5C3}\uFE0F",   label: "All Products" },
+          { id: "inventory_usa", icon: "\u{1F1FA}\u{1F1F8}", label: "USA Stock" },
+          { id: "inventory_uk",  icon: "\u{1F1EC}\u{1F1E7}", label: "UK Stock" },
+          { id: "sku_requests",  icon: "\u{1F4CB}",           label: "SKU Requests", bkey: "sku_req" }
         ]
       },
       {
@@ -13620,7 +13622,49 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
         kpi("Dropshippers", approvedDS.length, advPaid + " advance paid • " + (approvedDS.length - advPaid) + " pending", "#fbbf24", "\u{1F465}"),
         kpi("SkyCart Balance", "PKR " + (advPaid * 10000).toLocaleString(), advPaid + " \xD7 PKR 10,000 advance", "#0ea5e9", "\u{1F3E6}")
       ),
-      /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 } },
+      /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 0 } },
+      /* @__PURE__ */ import_react.default.createElement("div", { style: { background: "linear-gradient(135deg,rgba(59,130,246,.12),rgba(59,130,246,.04))", border: "1px solid rgba(59,130,246,.3)", borderRadius: 14, padding: "18px 20px" } },
+        /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 14 } },
+          /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 28 } }, "\u{1F1FA}\u{1F1F8}"),
+          /* @__PURE__ */ import_react.default.createElement("div", null,
+            /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: "#3B82F6" } }, "USA Stock"),
+            /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 11, color: "#64748b" } }, "Ahsan Aslam Warehouse")
+          )
+        ),
+        [
+          ["Total SKUs",   skus.filter(s => (s.warehouse||"").toUpperCase().includes("USA")).length, "#e2e8f0"],
+          ["Active",       skus.filter(s => (s.warehouse||"").toUpperCase().includes("USA") && s.status==="active").length, "#34d399"],
+          ["Out of Stock", skus.filter(s => (s.warehouse||"").toUpperCase().includes("USA") && s.status!=="active").length, "#f87171"],
+          ["Total Units",  skus.filter(s => (s.warehouse||"").toUpperCase().includes("USA")).reduce((a,s) => a+(s.stock||0),0), "#38bdf8"],
+        ].map(function(item) {
+          return /* @__PURE__ */ import_react.default.createElement("div", { key: item[0], style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "1px solid rgba(59,130,246,.1)" } },
+            /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 12, color: "#64748b" } }, item[0]),
+            /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 16, fontWeight: 800, color: item[2] } }, item[1].toLocaleString())
+          );
+        })
+      ),
+      /* @__PURE__ */ import_react.default.createElement("div", { style: { background: "linear-gradient(135deg,rgba(239,68,68,.12),rgba(239,68,68,.04))", border: "1px solid rgba(239,68,68,.3)", borderRadius: 14, padding: "18px 20px" } },
+        /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 14 } },
+          /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 28 } }, "\u{1F1EC}\u{1F1E7}"),
+          /* @__PURE__ */ import_react.default.createElement("div", null,
+            /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: "#EF4444" } }, "UK Stock"),
+            /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 11, color: "#64748b" } }, "UK Warehouse")
+          )
+        ),
+        [
+          ["Total SKUs",   skus.filter(s => (s.warehouse||"").toUpperCase().includes("UK")).length, "#e2e8f0"],
+          ["Active",       skus.filter(s => (s.warehouse||"").toUpperCase().includes("UK") && s.status==="active").length, "#34d399"],
+          ["Out of Stock", skus.filter(s => (s.warehouse||"").toUpperCase().includes("UK") && s.status!=="active").length, "#f87171"],
+          ["Total Units",  skus.filter(s => (s.warehouse||"").toUpperCase().includes("UK")).reduce((a,s) => a+(s.stock||0),0), "#38bdf8"],
+        ].map(function(item) {
+          return /* @__PURE__ */ import_react.default.createElement("div", { key: item[0], style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "1px solid rgba(239,68,68,.1)" } },
+            /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 12, color: "#64748b" } }, item[0]),
+            /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 16, fontWeight: 800, color: item[2] } }, item[1].toLocaleString())
+          );
+        })
+      )
+    ),
+    /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 } },
         /* @__PURE__ */ import_react.default.createElement("div", { style: { background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.07)", borderRadius: 14, padding: "18px 20px" } },
           /* @__PURE__ */ import_react.default.createElement("div", { style: { fontWeight: 700, fontSize: 13, color: "#e2e8f0", marginBottom: 14 } }, "\u{1F525} Top Sellers This Month"),
           top3.length === 0 ? /* @__PURE__ */ import_react.default.createElement("div", { style: { color: "#475569", fontSize: 13 } }, "No orders this month") :
@@ -13679,13 +13723,54 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
     const tabs = ["all", "pending", "processing", "flagged", "shipped", "delivered", "rejected"];
     return /* @__PURE__ */ import_react.default.createElement("div", { className: "card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-header" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "card-title", style: { marginBottom: 0 } }, "All Orders (", orders.length, ")"), /* @__PURE__ */ import_react.default.createElement("div", { className: "flex gap-2", style: { flexWrap: "wrap" } }, tabs.map((t) => /* @__PURE__ */ import_react.default.createElement("button", { key: t, className: `btn btn-xs ${filter === t ? "btn-primary" : "btn-outline"}`, onClick: () => setFilter(t) }, t)))), ld ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "Loading...") : shown.length === 0 ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "No orders") : /* @__PURE__ */ import_react.default.createElement("div", { className: "table-wrap" }, /* @__PURE__ */ import_react.default.createElement("table", null, /* @__PURE__ */ import_react.default.createElement("thead", null, /* @__PURE__ */ import_react.default.createElement("tr", null, /* @__PURE__ */ import_react.default.createElement("th", null, "ID"), /* @__PURE__ */ import_react.default.createElement("th", null, "Dropshipper"), /* @__PURE__ */ import_react.default.createElement("th", null, "SKU"), /* @__PURE__ */ import_react.default.createElement("th", null, "Qty"), /* @__PURE__ */ import_react.default.createElement("th", null, "Total"), /* @__PURE__ */ import_react.default.createElement("th", null, "Profit"), /* @__PURE__ */ import_react.default.createElement("th", null, "Status"), /* @__PURE__ */ import_react.default.createElement("th", null, "Date"), /* @__PURE__ */ import_react.default.createElement("th", null, "Actions"))), /* @__PURE__ */ import_react.default.createElement("tbody", null, shown.map((o) => /* @__PURE__ */ import_react.default.createElement("tr", { key: o.id }, /* @__PURE__ */ import_react.default.createElement("td", { style: { fontFamily: "monospace", fontSize: 11 } }, o.order_number || "#" + o.id?.slice(0, 8)), /* @__PURE__ */ import_react.default.createElement("td", null, o.dropshipper_name || "\u2014"), /* @__PURE__ */ import_react.default.createElement("td", null, o.sku_name || "\u2014"), /* @__PURE__ */ import_react.default.createElement("td", null, o.quantity), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (o.total_price || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", { style: { color: "#059669" } }, "PKR ", (o.profit || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement(Badge, { status: o.status })), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11 } }, new Date(o.created_at).toLocaleDateString()), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement("div", { className: "flex gap-2" }, o.status === "flagged" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-success btn-xs", onClick: () => setStatus(o.id, "processing") }, "Approve"), /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-danger btn-xs", onClick: () => setStatus(o.id, "rejected") }, "Reject")), o.status === "pending" && /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-primary btn-xs", onClick: () => setStatus(o.id, "processing") }, "Process")))))))));
   }
-  function AdminInventory({ toast, readOnly }) {
+  function AdminOrders({ toast }) {
+    const [orders, setOrders] = (0, import_react.useState)([]);
+    const [ld, setLd] = (0, import_react.useState)(true);
+    const [filter, setFilter] = (0, import_react.useState)("all");
+    (0, import_react.useEffect)(() => {
+      (async () => {
+        try {
+          setOrders(await sbFetch("/rest/v1/orders?select=*&order=created_at.desc"));
+        } catch (e) {
+          toast(e.message, "error");
+        }
+        setLd(false);
+      })();
+    }, []);
+    async function setStatus(id, status) {
+      try {
+        await sbFetch(`/rest/v1/orders?id=eq.${id}`, { method: "PATCH", body: JSON.stringify({ status }) });
+        setOrders(orders.map((o) => o.id === id ? { ...o, status } : o));
+        toast("Order updated", "success");
+      } catch (e) {
+        toast(e.message, "error");
+      }
+    }
+    const shown = filter === "all" ? orders : orders.filter((o) => o.status === filter);
+    const tabs = ["all", "pending", "processing", "flagged", "shipped", "delivered", "rejected"];
+    return /* @__PURE__ */ import_react.default.createElement("div", { className: "card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-header" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "card-title", style: { marginBottom: 0 } }, "All Orders (", orders.length, ")"), /* @__PURE__ */ import_react.default.createElement("div", { className: "flex gap-2", style: { flexWrap: "wrap" } }, tabs.map((t) => /* @__PURE__ */ import_react.default.createElement("button", { key: t, className: `btn btn-xs ${filter === t ? "btn-primary" : "btn-outline"}`, onClick: () => setFilter(t) }, t)))), ld ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "Loading...") : shown.length === 0 ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "No orders") : /* @__PURE__ */ import_react.default.createElement("div", { className: "table-wrap" }, /* @__PURE__ */ import_react.default.createElement("table", null, /* @__PURE__ */ import_react.default.createElement("thead", null, /* @__PURE__ */ import_react.default.createElement("tr", null, /* @__PURE__ */ import_react.default.createElement("th", null, "ID"), /* @__PURE__ */ import_react.default.createElement("th", null, "Dropshipper"), /* @__PURE__ */ import_react.default.createElement("th", null, "SKU"), /* @__PURE__ */ import_react.default.createElement("th", null, "Qty"), /* @__PURE__ */ import_react.default.createElement("th", null, "Total"), /* @__PURE__ */ import_react.default.createElement("th", null, "Profit"), /* @__PURE__ */ import_react.default.createElement("th", null, "Status"), /* @__PURE__ */ import_react.default.createElement("th", null, "Date"), /* @__PURE__ */ import_react.default.createElement("th", null, "Actions"))), /* @__PURE__ */ import_react.default.createElement("tbody", null, shown.map((o) => /* @__PURE__ */ import_react.default.createElement("tr", { key: o.id }, /* @__PURE__ */ import_react.default.createElement("td", { style: { fontFamily: "monospace", fontSize: 11 } }, o.order_number || "#" + o.id?.slice(0, 8)), /* @__PURE__ */ import_react.default.createElement("td", null, o.dropshipper_name || "\u2014"), /* @__PURE__ */ import_react.default.createElement("td", null, o.sku_name || "\u2014"), /* @__PURE__ */ import_react.default.createElement("td", null, o.quantity), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (o.total_price || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", { style: { color: "#059669" } }, "PKR ", (o.profit || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement(Badge, { status: o.status })), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11 } }, new Date(o.created_at).toLocaleDateString()), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement("div", { className: "flex gap-2" }, o.status === "flagged" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-success btn-xs", onClick: () => setStatus(o.id, "processing") }, "Approve"), /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-danger btn-xs", onClick: () => setStatus(o.id, "rejected") }, "Reject")), o.status === "pending" && /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-primary btn-xs", onClick: () => setStatus(o.id, "processing") }, "Process")))))))));
+  }
+  function AdminInventory({ toast, readOnly, region }) {
     const [skus, setSkus] = (0, import_react.useState)([]);
     const [suppliers, setSuppliers] = (0, import_react.useState)([]);
     const [ld, setLd] = (0, import_react.useState)(true);
     const blankSku = { name: "", sku_prefix: "EP", cost_price: "", retail_price: "", wh_fee: "1.5", stock: "", category: "Embroidered Patches", description: "", variations: [], warehouse: "Ahsan Aslam \u2014 USA", supplier_id: "", supplier_name: "" };
     const [showAdd, setShowAdd] = (0, import_react.useState)(false);
     const [showCsv, setShowCsv] = (0, import_react.useState)(false);
+    const [removeConfirm, setRemoveConfirm] = (0, import_react.useState)(false);
+    async function removeAllSkus() {
+      setRemoveConfirm(false);
+      const label = region || "ALL";
+      try {
+        const targets = region ? skus.filter(s => (s.warehouse || "").toUpperCase().includes(region.toUpperCase())) : skus;
+        if (targets.length === 0) { toast("No SKUs to remove", "info"); return; }
+        for (const s of targets) {
+          await sbFetch("/rest/v1/skus?id=eq." + s.id, { method: "DELETE" });
+        }
+        setSkus(skus.filter(s => !targets.map(t => t.id).includes(s.id)));
+        toast("\u2705 Removed " + targets.length + " " + label + " SKUs", "success");
+      } catch(e2) { toast("Remove failed: " + e2.message, "error"); }
+    }
     const [csvRows, setCsvRows] = (0, import_react.useState)([]);
     const [csvUploading, setCsvUploading] = (0, import_react.useState)(false);
     const [csvDone, setCsvDone] = (0, import_react.useState)({ ok: 0, err: 0, skip: 0 });
@@ -13922,6 +14007,9 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
       }
     }
     const margin = (f2) => (f2.retail_price || 0) + (f2.wh_fee || 0) - (f2.cost_price || 0);
+    const displaySkus = region ? skus.filter((s) => (s.warehouse || "").toUpperCase().includes(region.toUpperCase())) : skus;
+    const regionFlag = region === "USA" ? "\u{1F1FA}\u{1F1F8}" : region === "UK" ? "\u{1F1EC}\u{1F1E7}" : "\u{1F30D}";
+    const regionColor = region === "USA" ? "#3B82F6" : region === "UK" ? "#EF4444" : "#38bdf8";
     return /* @__PURE__ */ import_react.default.createElement("div", null,
     showCsv && /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 } },
       /* @__PURE__ */ import_react.default.createElement("div", { style: { background: "#1e293b", border: "1px solid #334155", borderRadius: 16, width: "100%", maxWidth: 720, maxHeight: "90vh", display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "0 25px 60px rgba(0,0,0,.6)" } },
@@ -13994,16 +14082,33 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
         )
       )
     ),
-    !readOnly && /* @__PURE__ */ import_react.default.createElement("div", { className: "section-header" }, /* @__PURE__ */ import_react.default.createElement("h2", { style: { fontSize: 16, fontWeight: 700, color: "#1e3a5f" } }, "Inventory (", skus.length, " SKUs)"), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 8 } },
-      /* @__PURE__ */ import_react.default.createElement("label", { style: { display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "linear-gradient(135deg,#059669,#10b981)", color: "#fff", transition: "all .2s" } },
-        "\u{1F4C2} Upload CSV",
-        /* @__PURE__ */ import_react.default.createElement("input", { type: "file", accept: ".csv", style: { display: "none" }, onChange: (e) => { parseCsvFile(e); setShowCsv(true); e.target.value = ""; } })
+    removeConfirm && /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,.8)", zIndex: 99999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 } },
+      /* @__PURE__ */ import_react.default.createElement("div", { style: { background: "#1e293b", border: "1px solid #dc2626", borderRadius: 14, padding: 28, maxWidth: 420, width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,.6)" } },
+        /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 36, textAlign: "center", marginBottom: 12 } }, "\u26A0\uFE0F"),
+        /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 18, fontWeight: 800, color: "#f87171", textAlign: "center", marginBottom: 8 } }, "Remove All " + (region || "") + " SKUs?"),
+        /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 13, color: "#94a3b8", textAlign: "center", marginBottom: 20, lineHeight: 1.7 } },
+          "This will permanently delete ", /* @__PURE__ */ import_react.default.createElement("strong", { style: { color: "#e2e8f0" } }, displaySkus.length), " SKUs", region ? " from the " + region + " warehouse" : " from all warehouses", ". This cannot be undone."
+        ),
+        /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 10 } },
+          /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-outline", style: { flex: 1, justifyContent: "center" }, onClick: () => setRemoveConfirm(false) }, "Cancel"),
+          /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-danger", style: { flex: 1, justifyContent: "center" }, onClick: removeAllSkus }, "\u{1F5D1}\uFE0F Yes, Remove All")
+        )
+      )
+    ),
+    !readOnly && /* @__PURE__ */ import_react.default.createElement("div", { className: "section-header" },
+      /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
+        /* @__PURE__ */ import_react.default.createElement("h2", { style: { fontSize: 16, fontWeight: 700, color: "#1e3a5f" } }, regionFlag, " ", region ? region + " Stock" : "All Inventory", " (", displaySkus.length, " SKUs)"),
+        region && /* @__PURE__ */ import_react.default.createElement("span", { style: { background: regionColor, color: "#fff", borderRadius: 99, padding: "2px 10px", fontSize: 11, fontWeight: 700 } }, region)
       ),
-      /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-primary", onClick: () => {
-      setF(blankSku);
-      setShowAdd(true);
-    } }, "+ Add SKU")
-    )), ld ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "Loading...") : /* @__PURE__ */ import_react.default.createElement("div", { className: "card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "table-wrap" }, /* @__PURE__ */ import_react.default.createElement("table", null, /* @__PURE__ */ import_react.default.createElement("thead", null, /* @__PURE__ */ import_react.default.createElement("tr", null, /* @__PURE__ */ import_react.default.createElement("th", null, "SKU Code"), /* @__PURE__ */ import_react.default.createElement("th", null, "Product"), /* @__PURE__ */ import_react.default.createElement("th", null, "Category"), /* @__PURE__ */ import_react.default.createElement("th", null, "Supplier"), /* @__PURE__ */ import_react.default.createElement("th", null, "Warehouse"), /* @__PURE__ */ import_react.default.createElement("th", null, "Cost"), /* @__PURE__ */ import_react.default.createElement("th", null, "Retail"), /* @__PURE__ */ import_react.default.createElement("th", null, "WH Fee"), /* @__PURE__ */ import_react.default.createElement("th", null, "Profit/Unit"), /* @__PURE__ */ import_react.default.createElement("th", null, "Stock"), /* @__PURE__ */ import_react.default.createElement("th", null, "Status"), !readOnly && /* @__PURE__ */ import_react.default.createElement("th", null, "Remove"))), /* @__PURE__ */ import_react.default.createElement("tbody", null, skus.map((s) => {
+      /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
+        /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-danger btn-sm", onClick: () => setRemoveConfirm(true), style: { fontSize: 12 } }, "\u{1F5D1}\uFE0F Remove All " + (region || "") + " SKUs"),
+        /* @__PURE__ */ import_react.default.createElement("label", { style: { display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "linear-gradient(135deg,#059669,#10b981)", color: "#fff", transition: "all .2s" } },
+          "\u{1F4C2} Upload CSV",
+          /* @__PURE__ */ import_react.default.createElement("input", { type: "file", accept: ".csv", style: { display: "none" }, onChange: (e) => { parseCsvFile(e); setShowCsv(true); e.target.value = ""; } })
+        ),
+        /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-primary", onClick: () => { setF(blankSku); setShowAdd(true); } }, "+ Add SKU")
+      )
+    ), ld ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "Loading...") : /* @__PURE__ */ import_react.default.createElement("div", { className: "card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "table-wrap" }, /* @__PURE__ */ import_react.default.createElement("table", null, /* @__PURE__ */ import_react.default.createElement("thead", null, /* @__PURE__ */ import_react.default.createElement("tr", null, /* @__PURE__ */ import_react.default.createElement("th", null, "SKU Code"), /* @__PURE__ */ import_react.default.createElement("th", null, "Product"), /* @__PURE__ */ import_react.default.createElement("th", null, "Category"), /* @__PURE__ */ import_react.default.createElement("th", null, "Supplier"), /* @__PURE__ */ import_react.default.createElement("th", null, "Warehouse"), /* @__PURE__ */ import_react.default.createElement("th", null, "Cost"), /* @__PURE__ */ import_react.default.createElement("th", null, "Retail"), /* @__PURE__ */ import_react.default.createElement("th", null, "WH Fee"), /* @__PURE__ */ import_react.default.createElement("th", null, "Profit/Unit"), /* @__PURE__ */ import_react.default.createElement("th", null, "Stock"), /* @__PURE__ */ import_react.default.createElement("th", null, "Status"), !readOnly && /* @__PURE__ */ import_react.default.createElement("th", null, "Remove"))), /* @__PURE__ */ import_react.default.createElement("tbody", null, displaySkus.map((s) => {
       const m = (s.retail_price || 0) + (s.wh_fee || 0) - (s.cost_price || 0);
       return /* @__PURE__ */ import_react.default.createElement("tr", { key: s.id }, /* @__PURE__ */ import_react.default.createElement("td", { style: { fontFamily: "monospace" } }, s.sku_code), /* @__PURE__ */ import_react.default.createElement("td", { style: { display: "flex", alignItems: "center", gap: 6 } }, s.name, /* @__PURE__ */ import_react.default.createElement(HeartButton, { skuId: s.id, initialLikes: s.likes || 0, likedBy: s.liked_by || [], userId: "admin" })), /* @__PURE__ */ import_react.default.createElement("td", null, s.category), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11, color: "#7dd3fc" } }, s.supplier_name || "\u2014"), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11 } }, s.warehouse || "Ahsan Aslam \u2014 USA"), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (s.cost_price || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (s.retail_price || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (s.wh_fee || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", { style: { color: m > 0 ? "#059669" : "#dc2626", fontWeight: 600 } }, "PKR ", m.toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement("span", { style: { color: s.stock < 10 ? "#dc2626" : "#059669", fontWeight: 600 } }, s.stock), s.stock < 10 && /* @__PURE__ */ import_react.default.createElement("span", { className: "badge bg-red", style: { marginLeft: 4, fontSize: 10 } }, "Low")), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement(Badge, { status: s.status || "active" })), !readOnly && /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-danger btn-xs", onClick: () => removeSku(s.id) }, "\u2715 Remove")));
     }))))), showAdd && /* @__PURE__ */ import_react.default.createElement(
@@ -15610,6 +15715,8 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
         if (page === "my_orders") return /* @__PURE__ */ import_react.default.createElement(DropshipperDashboard, { user, toast: addToast });
         if (page === "orders") return /* @__PURE__ */ import_react.default.createElement(AdminOrders, { toast: addToast });
         if (page === "inventory") return /* @__PURE__ */ import_react.default.createElement(AdminInventory, { toast: addToast });
+        if (page === "inventory_usa") return /* @__PURE__ */ import_react.default.createElement(AdminInventory, { toast: addToast, region: "USA" });
+        if (page === "inventory_uk")  return /* @__PURE__ */ import_react.default.createElement(AdminInventory, { toast: addToast, region: "UK" });
         if (page === "sku_requests") return /* @__PURE__ */ import_react.default.createElement(AdminSkuRequests, { toast: addToast });
         if (page === "dropshippers") return /* @__PURE__ */ import_react.default.createElement(AdminDropshippers, { toast: addToast });
         if (page === "anomalies") return /* @__PURE__ */ import_react.default.createElement(AdminAnomalies, { toast: addToast });
