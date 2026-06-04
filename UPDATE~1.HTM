@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>SkyDrop — Update Product Description</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{background:#1e293b;border:1px solid #334155;border-radius:14px;padding:28px;width:100%;max-width:660px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+h1{font-size:18px;font-weight:800;color:#38bdf8;margin-bottom:4px}
+p{font-size:12px;color:#64748b;margin-bottom:20px}
+label{font-size:12px;color:#94a3b8;display:block;margin-bottom:4px;font-weight:600}
+input,textarea{width:100%;padding:10px 12px;background:#0f172a;border:1px solid #334155;border-radius:8px;color:#e2e8f0;font-size:13px;outline:none;margin-bottom:14px;font-family:inherit}
+textarea{min-height:260px;line-height:1.7;resize:vertical}
+.btn{width:100%;padding:13px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;margin-bottom:10px}
+.btn-primary{background:linear-gradient(135deg,#0369a1,#0ea5e9);color:#fff}
+.btn-primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px rgba(14,165,233,.4)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+#status{text-align:center;font-size:13px;margin-top:8px;min-height:20px}
+.badge{display:inline-block;background:rgba(14,165,233,.15);color:#38bdf8;border-radius:99px;padding:3px 10px;font-size:11px;font-weight:700;margin-bottom:16px}
+</style>
+</head>
+<body>
+<div class="card">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+    <svg width="32" height="46" viewBox="0 0 66 76"><polygon points="33,2 61,22 33,70 5,22" fill="#0c4a6e"/><polygon points="33,10 55,24 33,60 11,24" fill="#0369a1"/><polygon points="33,18 47,26 33,50 19,26" fill="#0ea5e9"/><text x="33" y="32" font-family="Segoe UI" font-size="16" font-weight="900" fill="#fff" text-anchor="middle">S</text></svg>
+    <div><h1>Update Product Description</h1><p style="margin:0">Tommy TH Shield — Sample Professional Description</p></div>
+  </div>
+  <div class="badge">📝 Updates SKU: EP-TTHS-0141 in Supabase</div>
+
+  <label>SKU Code to Update</label>
+  <input id="skuInput" value="EP-TTHS-0141" placeholder="Enter SKU code">
+
+  <label>Product Description</label>
+  <textarea id="descInput">Tommy Hilfiger TH Shield Embroidered Patch — Premium USA Stock | Brand: Tommy Hilfiger (TH) | Type: Shield / Crest Embroidered Patch | Size: 6cm × 8cm | Material: Premium polyester thread embroidery on felt backing | Backing: Dual — iron-on heat adhesive + sew-on compatible | Colors: Navy blue, red and white classic TH shield crest | Edges: Precision-cut merrowed border | Finish: Vibrant colorfast threads — will not fade with normal use | Best For: Denim jackets, leather jackets, backpacks, caps, jeans and custom apparel | Application: Iron-on — place on fabric, cover with damp cloth, press firmly with iron at cotton setting for 30–45 seconds, allow to cool. Sew-on — stitch around edges for permanent attachment | Care: Hand wash only, do not iron directly on patch, avoid bleach | Origin: USA Warehouse — Ahsan Aslam Facility | Stock: Available | See SkyDrop_Product_Catalog.docx for full catalog</textarea>
+
+  <button class="btn btn-primary" id="updateBtn" onclick="updateDesc()">✅ Update Description in Supabase</button>
+  <div id="status"></div>
+</div>
+<script>
+const URL = "https://hyxteancjleykldhkvfs.supabase.co";
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh5eHRlYW5jamxleWtsZGhrdmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4NDQwNTksImV4cCI6MjA5MzQyMDA1OX0.tvPZFNWfXGyemglClHfbUyEeg3T2W-pTjMm9m1F2XmQ";
+
+async function updateDesc() {
+  const sku = document.getElementById('skuInput').value.trim();
+  const desc = document.getElementById('descInput').value.trim();
+  const btn = document.getElementById('updateBtn');
+  const status = document.getElementById('status');
+  if (!sku || !desc) { status.textContent = '❌ Please fill in both fields'; status.style.color='#f87171'; return; }
+  btn.disabled = true;
+  btn.textContent = '⏳ Updating...';
+  status.textContent = '';
+  try {
+    const res = await fetch(URL + '/rest/v1/skus?sku_code=eq.' + encodeURIComponent(sku), {
+      method: 'PATCH',
+      headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify({ description: desc })
+    });
+    if (!res.ok) { const e = await res.json(); throw new Error(e.message||res.statusText); }
+    const data = await res.json();
+    if (!data || data.length === 0) { status.textContent = '⚠️ SKU not found: ' + sku; status.style.color='#fbbf24'; }
+    else { status.textContent = '✅ Description updated for: ' + data[0].name; status.style.color='#34d399'; btn.textContent = '✅ Done!'; btn.style.background='linear-gradient(135deg,#059669,#10b981)'; }
+  } catch(e) { status.textContent = '❌ Error: ' + e.message; status.style.color='#f87171'; }
+  btn.disabled = false;
+}
+</script>
+</body></html>
