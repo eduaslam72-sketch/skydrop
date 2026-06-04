@@ -13191,9 +13191,10 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
       {
         group: "Reports & Settings", icon: "\u{1F4C5}",
         children: [
-          { id: "monthly_report", icon: "\u{1F4C5}", label: "Monthly Reports" },
-          { id: "manage_admins",  icon: "\u{1F511}", label: "Manage Admins" },
-          { id: "feedback",       icon: "\u2B50",    label: "Feedback" }
+          { id: "monthly_report",  icon: "\u{1F4C5}", label: "Monthly Reports" },
+          { id: "email_reports",   icon: "\u{1F4E7}", label: "Email Reports" },
+          { id: "manage_admins",   icon: "\u{1F511}", label: "Manage Admins" },
+          { id: "feedback",        icon: "\u2B50",    label: "Feedback" }
         ]
       }
     ],
@@ -13758,18 +13759,49 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
     const [showAdd, setShowAdd] = (0, import_react.useState)(false);
     const [showCsv, setShowCsv] = (0, import_react.useState)(false);
     const [removeConfirm, setRemoveConfirm] = (0, import_react.useState)(false);
+    const [selectedIds, setSelectedIds] = (0, import_react.useState)(new Set());
+    function toggleSelect(id) {
+      setSelectedIds(prev => {
+        const n = new Set(prev);
+        n.has(id) ? n.delete(id) : n.add(id);
+        return n;
+      });
+    }
+    function toggleSelectAll() {
+      if (selectedIds.size === displaySkus.length) {
+        setSelectedIds(new Set());
+      } else {
+        setSelectedIds(new Set(displaySkus.map(s => s.id)));
+      }
+    }
     async function removeAllSkus() {
       setRemoveConfirm(false);
       const label = region || "ALL";
       try {
-        const targets = region ? skus.filter(s => (s.warehouse || "").toUpperCase().includes(region.toUpperCase())) : skus;
+        const targets = region
+          ? skus.filter(s => (s.warehouse || "").toUpperCase().includes(region.toUpperCase()))
+          : skus;
         if (targets.length === 0) { toast("No SKUs to remove", "info"); return; }
-        for (const s of targets) {
-          await sbFetch("/rest/v1/skus?id=eq." + s.id, { method: "DELETE" });
-        }
-        setSkus(skus.filter(s => !targets.map(t => t.id).includes(s.id)));
+        const ids = targets.map(s => s.id).filter(Boolean);
+        if (ids.length === 0) { toast("No valid IDs found", "error"); return; }
+        // Bulk delete in one request using id=in.(...)
+        const idList = ids.join(",");
+        await sbFetch("/rest/v1/skus?id=in.(" + idList + ")", { method: "DELETE" });
+        setSkus(prev => prev.filter(s => !ids.includes(s.id)));
+        setSelectedIds(new Set());
         toast("\u2705 Removed " + targets.length + " " + label + " SKUs", "success");
       } catch(e2) { toast("Remove failed: " + e2.message, "error"); }
+    }
+    async function deleteSelected() {
+      const ids = [...selectedIds];
+      if (ids.length === 0) return;
+      if (!window.confirm("Delete " + ids.length + " selected SKUs?")) return;
+      try {
+        await sbFetch("/rest/v1/skus?id=in.(" + ids.join(",") + ")", { method: "DELETE" });
+        setSkus(prev => prev.filter(s => !selectedIds.has(s.id)));
+        setSelectedIds(new Set());
+        toast("\u2705 Deleted " + ids.length + " SKUs", "success");
+      } catch(e2) { toast("Delete failed: " + e2.message, "error"); }
     }
     const [csvRows, setCsvRows] = (0, import_react.useState)([]);
     const [csvUploading, setCsvUploading] = (0, import_react.useState)(false);
@@ -14100,7 +14132,10 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
         /* @__PURE__ */ import_react.default.createElement("h2", { style: { fontSize: 16, fontWeight: 700, color: "#1e3a5f" } }, regionFlag, " ", region ? region + " Stock" : "All Inventory", " (", displaySkus.length, " SKUs)"),
         region && /* @__PURE__ */ import_react.default.createElement("span", { style: { background: regionColor, color: "#fff", borderRadius: 99, padding: "2px 10px", fontSize: 11, fontWeight: 700 } }, region)
       ),
-      /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
+      /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" } },
+        selectedIds.size > 0 && /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-danger btn-sm", onClick: deleteSelected },
+          "\u{1F5D1}\uFE0F Delete Selected (" + selectedIds.size + ")"
+        ),
         /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-danger btn-sm", onClick: () => setRemoveConfirm(true), style: { fontSize: 12 } }, "\u{1F5D1}\uFE0F Remove All " + (region || "") + " SKUs"),
         /* @__PURE__ */ import_react.default.createElement("label", { style: { display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "linear-gradient(135deg,#059669,#10b981)", color: "#fff", transition: "all .2s" } },
           "\u{1F4C2} Upload CSV",
@@ -14108,9 +14143,23 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
         ),
         /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-primary", onClick: () => { setF(blankSku); setShowAdd(true); } }, "+ Add SKU")
       )
-    ), ld ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "Loading...") : /* @__PURE__ */ import_react.default.createElement("div", { className: "card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "table-wrap" }, /* @__PURE__ */ import_react.default.createElement("table", null, /* @__PURE__ */ import_react.default.createElement("thead", null, /* @__PURE__ */ import_react.default.createElement("tr", null, /* @__PURE__ */ import_react.default.createElement("th", null, "SKU Code"), /* @__PURE__ */ import_react.default.createElement("th", null, "Product"), /* @__PURE__ */ import_react.default.createElement("th", null, "Category"), /* @__PURE__ */ import_react.default.createElement("th", null, "Supplier"), /* @__PURE__ */ import_react.default.createElement("th", null, "Warehouse"), /* @__PURE__ */ import_react.default.createElement("th", null, "Cost"), /* @__PURE__ */ import_react.default.createElement("th", null, "Retail"), /* @__PURE__ */ import_react.default.createElement("th", null, "WH Fee"), /* @__PURE__ */ import_react.default.createElement("th", null, "Profit/Unit"), /* @__PURE__ */ import_react.default.createElement("th", null, "Stock"), /* @__PURE__ */ import_react.default.createElement("th", null, "Status"), !readOnly && /* @__PURE__ */ import_react.default.createElement("th", null, "Remove"))), /* @__PURE__ */ import_react.default.createElement("tbody", null, displaySkus.map((s) => {
+    ), ld ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "Loading...") : /* @__PURE__ */ import_react.default.createElement("div", { className: "card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "table-wrap" }, /* @__PURE__ */ import_react.default.createElement("table", null, /* @__PURE__ */ import_react.default.createElement("thead", null, /* @__PURE__ */ import_react.default.createElement("tr", null, /* @__PURE__ */ import_react.default.createElement("th", { style: { width: 36, textAlign: "center" } },
+                  /* @__PURE__ */ import_react.default.createElement("input", { type: "checkbox", style: { width: 16, height: 16, cursor: "pointer", accentColor: "#0ea5e9" },
+                    checked: displaySkus.length > 0 && selectedIds.size === displaySkus.length,
+                    onChange: toggleSelectAll,
+                    title: "Select All"
+                  })
+                ),
+                /* @__PURE__ */ import_react.default.createElement("th", null, "SKU Code"), /* @__PURE__ */ import_react.default.createElement("th", null, "Product"), /* @__PURE__ */ import_react.default.createElement("th", null, "Category"), /* @__PURE__ */ import_react.default.createElement("th", null, "Supplier"), /* @__PURE__ */ import_react.default.createElement("th", null, "Warehouse"), /* @__PURE__ */ import_react.default.createElement("th", null, "Cost"), /* @__PURE__ */ import_react.default.createElement("th", null, "Retail"), /* @__PURE__ */ import_react.default.createElement("th", null, "WH Fee"), /* @__PURE__ */ import_react.default.createElement("th", null, "Profit/Unit"), /* @__PURE__ */ import_react.default.createElement("th", null, "Stock"), /* @__PURE__ */ import_react.default.createElement("th", null, "Status"), !readOnly && /* @__PURE__ */ import_react.default.createElement("th", null, "Remove"))), /* @__PURE__ */ import_react.default.createElement("tbody", null, displaySkus.map((s) => {
       const m = (s.retail_price || 0) + (s.wh_fee || 0) - (s.cost_price || 0);
-      return /* @__PURE__ */ import_react.default.createElement("tr", { key: s.id }, /* @__PURE__ */ import_react.default.createElement("td", { style: { fontFamily: "monospace" } }, s.sku_code), /* @__PURE__ */ import_react.default.createElement("td", { style: { display: "flex", alignItems: "center", gap: 6 } }, s.name, /* @__PURE__ */ import_react.default.createElement(HeartButton, { skuId: s.id, initialLikes: s.likes || 0, likedBy: s.liked_by || [], userId: "admin" })), /* @__PURE__ */ import_react.default.createElement("td", null, s.category), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11, color: "#7dd3fc" } }, s.supplier_name || "\u2014"), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11 } }, s.warehouse || "Ahsan Aslam \u2014 USA"), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (s.cost_price || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (s.retail_price || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (s.wh_fee || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", { style: { color: m > 0 ? "#059669" : "#dc2626", fontWeight: 600 } }, "PKR ", m.toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement("span", { style: { color: s.stock < 10 ? "#dc2626" : "#059669", fontWeight: 600 } }, s.stock), s.stock < 10 && /* @__PURE__ */ import_react.default.createElement("span", { className: "badge bg-red", style: { marginLeft: 4, fontSize: 10 } }, "Low")), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement(Badge, { status: s.status || "active" })), !readOnly && /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-danger btn-xs", onClick: () => removeSku(s.id) }, "\u2715 Remove")));
+      return /* @__PURE__ */ import_react.default.createElement("tr", { key: s.id, style: { background: selectedIds.has(s.id) ? "rgba(14,165,233,.08)" : undefined } },
+        /* @__PURE__ */ import_react.default.createElement("td", { style: { textAlign: "center", width: 36 } },
+          /* @__PURE__ */ import_react.default.createElement("input", { type: "checkbox", style: { width: 16, height: 16, cursor: "pointer", accentColor: "#0ea5e9" },
+            checked: selectedIds.has(s.id),
+            onChange: () => toggleSelect(s.id)
+          })
+        ),
+        /* @__PURE__ */ import_react.default.createElement("td", { style: { fontFamily: "monospace" } }, s.sku_code), /* @__PURE__ */ import_react.default.createElement("td", { style: { display: "flex", alignItems: "center", gap: 6 } }, s.name, /* @__PURE__ */ import_react.default.createElement(HeartButton, { skuId: s.id, initialLikes: s.likes || 0, likedBy: s.liked_by || [], userId: "admin" })), /* @__PURE__ */ import_react.default.createElement("td", null, s.category), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11, color: "#7dd3fc" } }, s.supplier_name || "\u2014"), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11 } }, s.warehouse || "Ahsan Aslam \u2014 USA"), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (s.cost_price || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (s.retail_price || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (s.wh_fee || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", { style: { color: m > 0 ? "#059669" : "#dc2626", fontWeight: 600 } }, "PKR ", m.toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement("span", { style: { color: s.stock < 10 ? "#dc2626" : "#059669", fontWeight: 600 } }, s.stock), s.stock < 10 && /* @__PURE__ */ import_react.default.createElement("span", { className: "badge bg-red", style: { marginLeft: 4, fontSize: 10 } }, "Low")), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement(Badge, { status: s.status || "active" })), !readOnly && /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-danger btn-xs", onClick: () => removeSku(s.id) }, "\u2715 Remove")));
     }))))), showAdd && /* @__PURE__ */ import_react.default.createElement(
       Modal,
       {
@@ -14508,7 +14557,15 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
       setBusy(false);
     }
     if (orderAnim) return /* @__PURE__ */ import_react.default.createElement(OrderSuccessAnimation, { skuName: orderAnim, onDone: () => setOrderAnim(null) });
-    const filtered = skus.filter(
+    const [warehouseTab, setWarehouseTab] = (0, import_react.useState)("all");
+    const warehouseFiltered = warehouseTab === "all" ? skus : skus.filter(s => {
+      const wh = (s.warehouse || "").toUpperCase();
+      if (warehouseTab === "usa") return wh.includes("USA");
+      if (warehouseTab === "uk")  return wh.includes("UK") && !wh.includes("USA");
+      if (warehouseTab === "de")  return wh.includes("DE") || wh.includes("GERMANY") || wh.includes("DEUTSCH");
+      return true;
+    });
+    const filtered = warehouseFiltered.filter(
       (s) => !search || s.name.toLowerCase().includes(search.toLowerCase()) || (s.sku_code || "").toLowerCase().includes(search.toLowerCase())
     );
     const totalRevenue = recent.reduce((s, o) => s + (o.total_price || 0), 0);
@@ -14519,7 +14576,31 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
       { label: "Recent Profit", value: "PKR " + (totalProfit / 1e3).toFixed(1) + "k", icon: "\u{1F4C8}", color: totalProfit >= 0 ? "#34d399" : "#f87171" },
       { label: "Products", value: skus.length + " items", icon: "\u{1F5C3}\uFE0F", color: "#a78bfa" },
       { label: "Cart Items", value: cart.length + " in cart", icon: "\u{1F6D2}", color: "#fbbf24" }
-    ].map(({ label, value, icon, color }) => /* @__PURE__ */ import_react.default.createElement("div", { key: label, style: { background: "rgba(255,255,255,.03)", borderRadius: 10, padding: "12px 14px", border: "1px solid rgba(255,255,255,.06)" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 22, marginBottom: 4 } }, icon), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 20, fontWeight: 800, color } }, value), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 10, color: "#475569", marginTop: 2, textTransform: "uppercase", letterSpacing: 0.8 } }, label))))), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "grid", gridTemplateColumns: cart.length > 0 ? "1fr 340px" : "1fr", gap: 14, alignItems: "start" } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "card", style: { marginBottom: 0 } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "card-title", style: { marginBottom: 0 } }, "\u{1F4E6} Select Products"), cart.length > 0 && /* @__PURE__ */ import_react.default.createElement("span", { style: { background: "#0284c7", color: "#fff", borderRadius: 99, padding: "2px 10px", fontSize: 12, fontWeight: 700 } }, cart.length, " in cart")), skus.length === 0 ? /* @__PURE__ */ import_react.default.createElement("div", { className: "info-box" }, "No products assigned yet.") : /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("input", { value: search, onChange: (e) => setSearch(e.target.value), placeholder: "\u{1F50D} Search by name or SKU...", style: { width: "100%", padding: "9px 12px", background: "#0f172a", border: "1px solid #334155", borderRadius: 8, color: "#e2e8f0", fontSize: 13, marginBottom: 12, outline: "none", boxSizing: "border-box" } }), /* @__PURE__ */ import_react.default.createElement("div", { className: "sku-grid" }, filtered.map((s) => {
+    ].map(({ label, value, icon, color }) => /* @__PURE__ */ import_react.default.createElement("div", { key: label, style: { background: "rgba(255,255,255,.03)", borderRadius: 10, padding: "12px 14px", border: "1px solid rgba(255,255,255,.06)" } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 22, marginBottom: 4 } }, icon), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 20, fontWeight: 800, color } }, value), /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize: 10, color: "#475569", marginTop: 2, textTransform: "uppercase", letterSpacing: 0.8 } }, label))))), /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "grid", gridTemplateColumns: cart.length > 0 ? "1fr 340px" : "1fr", gap: 14, alignItems: "start" } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "card", style: { marginBottom: 0 } }, /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "card-title", style: { marginBottom: 0 } }, "\u{1F4E6} Select Products"), cart.length > 0 && /* @__PURE__ */ import_react.default.createElement("span", { style: { background: "#0284c7", color: "#fff", borderRadius: 99, padding: "2px 10px", fontSize: 12, fontWeight: 700 } }, cart.length, " in cart")), skus.length === 0 ? /* @__PURE__ */ import_react.default.createElement("div", { className: "info-box" }, "No products assigned yet.") : /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" } },
+              [
+                ["all", "\u{1F30D} All Warehouses", "#334155", "#38bdf8"],
+                ["usa", "\u{1F1FA}\u{1F1F8} USA", "#1e3a5f", "#3B82F6"],
+                ["uk",  "\u{1F1EC}\u{1F1E7} UK",  "#3a1e1e", "#EF4444"],
+                ["de",  "\u{1F1E9}\u{1F1EA} Germany", "#1e3a2a", "#22C55E"],
+              ].map(([id, label, bg, col]) =>
+                /* @__PURE__ */ import_react.default.createElement("button", {
+                  key: id,
+                  onClick: () => setWarehouseTab(id),
+                  style: {
+                    padding: "7px 16px", borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: "pointer", border: "2px solid",
+                    background: warehouseTab === id ? col : bg,
+                    borderColor: col,
+                    color: warehouseTab === id ? "#fff" : col,
+                    transition: "all .2s"
+                  }
+                }, label,
+                  warehouseTab === id && /* @__PURE__ */ import_react.default.createElement("span", { style: { marginLeft: 6, background: "rgba(255,255,255,.25)", borderRadius: 99, padding: "1px 7px", fontSize: 11 } },
+                    warehouseFiltered.filter(s => !search || s.name.toLowerCase().includes(search.toLowerCase())).length
+                  )
+                )
+              )
+            ),
+              /* @__PURE__ */ import_react.default.createElement("input", { value: search, onChange: (e) => setSearch(e.target.value), placeholder: "\u{1F50D} Search by name or SKU...", style: { width: "100%", padding: "9px 12px", background: "#0f172a", border: "1px solid #334155", borderRadius: 8, color: "#e2e8f0", fontSize: 13, marginBottom: 12, outline: "none", boxSizing: "border-box" } }), /* @__PURE__ */ import_react.default.createElement("div", { className: "sku-grid" }, filtered.map((s) => {
       const inCart = cart.find((c) => c.sku.id === s.id);
       return /* @__PURE__ */ import_react.default.createElement(
         "div",
@@ -15634,6 +15715,323 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
       return this.props.children;
     }
   }
+    function EmailReports({ toast }) {
+    const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    const now = new Date();
+    const [selMonth, setSelMonth] = (0,import_react.useState)(now.getMonth());
+    const [selYear,  setSelYear]  = (0,import_react.useState)(now.getFullYear());
+    const [reports,  setReports]  = (0,import_react.useState)([]);
+    const [loading,  setLoading]  = (0,import_react.useState)(false);
+    const [sendStatus, setSendStatus] = (0,import_react.useState)({});
+    const [preview,  setPreview]  = (0,import_react.useState)(null);
+    const [ejsKey,   setEjsKey]   = (0,import_react.useState)(localStorage.getItem("ejs_pub")||"");
+    const [ejsSvc,   setEjsSvc]   = (0,import_react.useState)(localStorage.getItem("ejs_svc")||"");
+    const [ejsTpl,   setEjsTpl]   = (0,import_react.useState)(localStorage.getItem("ejs_tpl")||"");
+    const [showSetup,setShowSetup]= (0,import_react.useState)(false);
+    const ejsReady = ejsKey && ejsSvc && ejsTpl;
+
+    function saveEjs() {
+      localStorage.setItem("ejs_pub", ejsKey);
+      localStorage.setItem("ejs_svc", ejsSvc);
+      localStorage.setItem("ejs_tpl", ejsTpl);
+      setShowSetup(false);
+      toast("EmailJS credentials saved", "success");
+    }
+
+    async function loadReports() {
+      setLoading(true); setReports([]); setSendStatus({});
+      try {
+        const y = selYear, m = selMonth;
+        const from = new Date(y, m, 1).toISOString().split("T")[0];
+        const to   = new Date(y, m+1, 1).toISOString().split("T")[0];
+        const [profiles, orders, invoices] = await Promise.all([
+          sbFetch("/rest/v1/profiles?role=eq.dropshipper&status=eq.approved&select=id,name,email,phone,company"),
+          sbFetch(`/rest/v1/orders?created_at=gte.${from}&created_at=lt.${to}&select=*`),
+          sbFetch("/rest/v1/invoices?status=eq.unpaid&select=*"),
+        ]);
+        const rows = (profiles||[]).map(p => {
+          const myOrders = (orders||[]).filter(o => o.dropshipper_id === p.id);
+          const myInvoices = (invoices||[]).filter(i => i.dropshipper_id === p.id);
+          const revenue = myOrders.reduce((s,o) => s+(o.total_price||0), 0);
+          const profit  = myOrders.filter(o=>o.status==="delivered").reduce((s,o) => s+(o.profit||0), 0);
+          const unpaid  = myInvoices.reduce((s,i) => s+(i.amount||0), 0);
+          const statuses = { pending:0, processing:0, shipped:0, delivered:0, cancelled:0 };
+          myOrders.forEach(o => { if(statuses[o.status]!==undefined) statuses[o.status]++; });
+          return { ...p, orders: myOrders.length, revenue, profit, unpaid, statuses, hasActivity: myOrders.length > 0 };
+        });
+        setReports(rows);
+      } catch(e2) { toast("Error loading: " + e2.message, "error"); }
+      setLoading(false);
+    }
+
+    function buildEmailHtml(r, monthLabel) {
+      const profitColor = r.profit >= 0 ? "#059669" : "#dc2626";
+      return `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+        body{margin:0;padding:0;background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif}
+        .wrap{max-width:600px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.1)}
+        .header{background:linear-gradient(135deg,#0c2d4a,#0369a1);padding:28px 32px;text-align:center}
+        .logo-text{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.5px}
+        .logo-sub{font-size:12px;color:#7dd3fc;letter-spacing:3px;margin-top:2px}
+        .body{padding:28px 32px}
+        .greeting{font-size:18px;font-weight:700;color:#0f172a;margin-bottom:6px}
+        .sub{font-size:13px;color:#64748b;margin-bottom:24px;line-height:1.6}
+        .month-badge{display:inline-block;background:#e8f4fd;color:#0369a1;border-radius:99px;padding:6px 16px;font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:20px}
+        .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+        .stat-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;text-align:center}
+        .stat-val{font-size:24px;font-weight:800;margin-bottom:4px}
+        .stat-lbl{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.8px}
+        .pipeline{background:#f8fafc;border-radius:10px;padding:16px;margin-bottom:20px}
+        .pipeline h3{font-size:13px;font-weight:700;color:#334155;margin:0 0 12px}
+        .pipe-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #e2e8f0;font-size:13px}
+        .pipe-row:last-child{border:none}
+        .unpaid-box{background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:14px 16px;margin-bottom:20px}
+        .unpaid-box h3{color:#dc2626;font-size:13px;font-weight:700;margin:0 0 4px}
+        .unpaid-box p{color:#7f1d1d;font-size:13px;margin:0}
+        .footer{background:#0f172a;padding:20px 32px;text-align:center}
+        .footer p{color:#64748b;font-size:12px;margin:4px 0;line-height:1.6}
+        .footer a{color:#38bdf8;text-decoration:none}
+        .divider{height:1px;background:#e2e8f0;margin:20px 0}
+        .cta{display:block;background:linear-gradient(135deg,#0369a1,#0ea5e9);color:#fff;text-align:center;padding:12px;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none;margin-bottom:20px}
+      </style></head><body>
+      <div class="wrap">
+        <div class="header">
+          <div class="logo-text">Sky<span style="color:#38bdf8">Drop</span> Pro</div>
+          <div class="logo-sub">BY SKYCART</div>
+        </div>
+        <div class="body">
+          <div class="greeting">Hello, ${r.name || r.email.split("@")[0]}! 👋</div>
+          <p class="sub">Here is your personal performance summary for the month. Thank you for being part of the SkyDrop Pro family!</p>
+          <div class="month-badge">📅 ${monthLabel} Report</div>
+          <div class="stat-grid">
+            <div class="stat-card"><div class="stat-val" style="color:#0369a1">${r.orders}</div><div class="stat-lbl">Total Orders</div></div>
+            <div class="stat-card"><div class="stat-val" style="color:#0f172a">RS ${r.revenue.toLocaleString()}</div><div class="stat-lbl">Revenue</div></div>
+            <div class="stat-card"><div class="stat-val" style="color:${profitColor}">RS ${r.profit.toLocaleString()}</div><div class="stat-lbl">Profit Earned</div></div>
+            <div class="stat-card"><div class="stat-val" style="color:${r.unpaid>0?"#dc2626":"#059669"}">RS ${r.unpaid.toLocaleString()}</div><div class="stat-lbl">Unpaid Invoices</div></div>
+          </div>
+          ${r.orders > 0 ? `<div class="pipeline"><h3>📦 Order Pipeline</h3>
+            ${Object.entries(r.statuses).map(([st,cnt]) => cnt > 0 ? `<div class="pipe-row"><span style="text-transform:capitalize;color:#334155">${st}</span><span style="font-weight:700;color:#0369a1">${cnt}</span></div>` : "").join("")}
+          </div>` : ""}
+          ${r.unpaid > 0 ? `<div class="unpaid-box"><h3>⚠️ Outstanding Balance</h3><p>You have PKR ${r.unpaid.toLocaleString()} in unpaid invoices. Please settle at your earliest convenience to keep your account active.</p></div>` : ""}
+          <div class="divider"></div>
+          ${r.orders === 0 ? `<p style="color:#64748b;font-size:13px;text-align:center;padding:12px 0">No orders this month — you have great products waiting! Log in and start selling 🚀</p>` : `<p style="color:#334155;font-size:13px;line-height:1.7">Keep up the great work! ${r.orders} orders this month puts you on track for a strong close. If you need any support, we're always here.</p>`}
+          <div class="divider"></div>
+          <p style="font-size:12px;color:#94a3b8;text-align:center">Questions? WhatsApp us or log into SkyDrop Pro for full details.</p>
+        </div>
+        <div class="footer">
+          <p><strong style="color:#e2e8f0">SkyDrop Pro — by SkyCart</strong></p>
+          <p>This is an automated monthly report. Do not reply to this email.</p>
+        </div>
+      </div></body></html>`;
+    }
+
+    function downloadPdf(r) {
+      const monthLabel = MONTHS[selMonth] + " " + selYear;
+      const html = buildEmailHtml(r, monthLabel);
+      const win = window.open("", "_blank");
+      if (!win) { toast("Allow popups to download PDF", "error"); return; }
+      win.document.write(`<!DOCTYPE html><html><head><title>Report - ${r.name||r.email} - ${monthLabel}</title>
+        <style>@media print{body{margin:0}button{display:none!important}.no-print{display:none!important}}</style>
+        </head><body>
+        <div class="no-print" style="padding:12px;background:#1e293b;display:flex;gap:10px;align-items:center">
+          <button onclick="window.print()" style="background:#0369a1;color:#fff;border:none;padding:10px 20px;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer">🖨️ Print / Save as PDF</button>
+          <button onclick="window.close()" style="background:#334155;color:#fff;border:none;padding:10px 20px;border-radius:6px;font-size:14px;cursor:pointer">✕ Close</button>
+          <span style="color:#94a3b8;font-size:12px">Use browser Print dialog → Save as PDF</span>
+        </div>
+        ${html}
+        <scr" + "ipt>setTimeout(()=>window.print(),800)<\/scr" + "ipt>
+        </body></html>`);
+      win.document.close();
+    }
+    async function sendOneEmail(r) {
+      const monthLabel = MONTHS[selMonth] + " " + selYear;
+      setSendStatus(p => ({ ...p, [r.id]: "sending" }));
+      const html = buildEmailHtml(r, monthLabel);
+      try {
+        if (!ejsReady) throw new Error("EmailJS not configured");
+        // Load EmailJS SDK if not already loaded
+        if (!window.emailjs) {
+          await new Promise((res, rej) => {
+            const s = document.createElement("script");
+            s.src = "https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js";
+            s.onload = res; s.onerror = rej;
+            document.head.appendChild(s);
+          });
+          window.emailjs.init({ publicKey: ejsKey });
+        }
+        await window.emailjs.send(ejsSvc, ejsTpl, {
+          to_email: r.email,
+          to_name: r.name || r.email.split("@")[0],
+          month_label: monthLabel,
+          orders_count: String(r.orders),
+          revenue: "RS " + r.revenue.toLocaleString(),
+          profit: "RS " + r.profit.toLocaleString(),
+          unpaid: r.unpaid > 0 ? "RS " + r.unpaid.toLocaleString() : "None",
+          email_body_html: html,
+        });
+        setSendStatus(p => ({ ...p, [r.id]: "sent" }));
+      } catch(e2) {
+        setSendStatus(p => ({ ...p, [r.id]: "error:" + e2.message }));
+      }
+    }
+
+    async function sendAll() {
+      const active = reports.filter(r => r.hasActivity);
+      for (const r of active) {
+        await sendOneEmail(r);
+        await new Promise(res => setTimeout(res, 600));
+      }
+      toast("✅ Done sending " + active.length + " email reports", "success");
+    }
+
+    function mailtoLink(r) {
+      const sub = encodeURIComponent("Your SkyDrop Pro Report — " + MONTHS[selMonth] + " " + selYear);
+      const body = encodeURIComponent(
+        "Dear " + (r.name||r.email) + ",\n\nHere is your " + MONTHS[selMonth] + " " + selYear + " report:\n\nOrders: " + r.orders +
+        "\nRevenue: RS " + r.revenue.toLocaleString() + "\nProfit: RS " + r.profit.toLocaleString() +
+        (r.unpaid > 0 ? "\nUnpaid Invoices: RS " + r.unpaid.toLocaleString() : "") +
+        "\n\nThank you for being part of SkyDrop Pro!\nSkyCart Team"
+      );
+      return "mailto:" + r.email + "?subject=" + sub + "&body=" + body;
+    }
+
+    const statusIcon = (id) => {
+      const s = sendStatus[id];
+      if (!s) return null;
+      if (s === "sending") return import_react.default.createElement("span", { className: "spinner", style: { borderTopColor: "#38bdf8" } });
+      if (s === "sent")    return import_react.default.createElement("span", { style: { color: "#34d399", fontWeight: 700 } }, "✅ Sent");
+      return import_react.default.createElement("span", { style: { color: "#f87171", fontSize: 11 }, title: s }, "❌ Error");
+    };
+
+    const active = reports.filter(r => r.hasActivity);
+    const sent   = Object.values(sendStatus).filter(s => s === "sent").length;
+
+    return import_react.default.createElement("div", null,
+
+      /* SETUP MODAL */
+      showSetup && import_react.default.createElement("div", { style: { position:"fixed",inset:0,background:"rgba(0,0,0,.75)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:16 } },
+        import_react.default.createElement("div", { style: { background:"#1e293b",border:"1px solid #334155",borderRadius:14,padding:28,maxWidth:480,width:"100%",maxHeight:"90vh",overflowY:"auto" } },
+          import_react.default.createElement("div", { style: { display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16 } },
+            import_react.default.createElement("div", { style: { fontSize:16,fontWeight:800,color:"#38bdf8" } }, "\u{1F4E7} EmailJS Setup"),
+            import_react.default.createElement("button", { onClick: ()=>setShowSetup(false), style: { background:"none",border:"none",color:"#94a3b8",cursor:"pointer",fontSize:18 } }, "✕")
+          ),
+          import_react.default.createElement("div", { style: { background:"rgba(14,165,233,.08)",border:"1px solid #0ea5e9",borderRadius:8,padding:12,fontSize:12,color:"#7dd3fc",marginBottom:16,lineHeight:1.7 } },
+            import_react.default.createElement("strong", { style:{color:"#38bdf8",display:"block",marginBottom:4} }, "Setup Steps (5 min, free):"),
+            "1. Go to emailjs.com → Create free account", import_react.default.createElement("br",null),
+            "2. Add Email Service → Connect Gmail", import_react.default.createElement("br",null),
+            "3. Create Email Template → add variable: {{email_body_html}}", import_react.default.createElement("br",null),
+            "4. Account → copy your Public Key", import_react.default.createElement("br",null),
+            "5. Paste all three IDs below → Save"
+          ),
+          [["Service ID","ejs_svc","service_xxxxxxx",ejsSvc,setEjsSvc],
+           ["Template ID","ejs_tpl","template_xxxxxxx",ejsTpl,setEjsTpl],
+           ["Public Key","ejs_pub","AbCdEfGhIjKlMnOp",ejsKey,setEjsKey]].map(([lbl,k,ph,val,setter]) =>
+            import_react.default.createElement("div", { key:k, className:"form-group" },
+              import_react.default.createElement("label", null, lbl),
+              import_react.default.createElement("input", { value:val, onChange:e=>setter(e.target.value), placeholder:ph })
+            )
+          ),
+          import_react.default.createElement("button", { className:"btn btn-primary", style:{width:"100%",justifyContent:"center",marginTop:8}, onClick:saveEjs }, "Save Credentials"),
+          import_react.default.createElement("div", { style:{marginTop:12,fontSize:11,color:"#475569",textAlign:"center"} }, "Credentials saved in your browser only. Free plan: 200 emails/month.")
+        )
+      ),
+
+      /* PREVIEW MODAL */
+      preview && import_react.default.createElement("div", { style: { position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:9998,display:"flex",alignItems:"center",justifyContent:"center",padding:16 } },
+        import_react.default.createElement("div", { style: { background:"#1e293b",border:"1px solid #334155",borderRadius:14,width:"100%",maxWidth:640,maxHeight:"90vh",display:"flex",flexDirection:"column",overflow:"hidden" } },
+          import_react.default.createElement("div", { style: { padding:"14px 20px",borderBottom:"1px solid #334155",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0 } },
+            import_react.default.createElement("div", { style: { fontWeight:700,color:"#e2e8f0" } }, "Email Preview — ", preview.name||preview.email),
+            import_react.default.createElement("button", { onClick:()=>setPreview(null), style:{background:"rgba(255,255,255,.1)",border:"none",borderRadius:6,padding:"4px 10px",color:"#fff",cursor:"pointer"} }, "✕")
+          ),
+          import_react.default.createElement("iframe", { srcDoc: buildEmailHtml(preview, MONTHS[selMonth]+" "+selYear), style:{flex:1,border:"none",background:"#f1f5f9"} }),
+          import_react.default.createElement("div", { style:{padding:"12px 20px",borderTop:"1px solid #334155",display:"flex",gap:8,flexShrink:0} },
+            import_react.default.createElement("button", { className:"btn btn-success", style:{flex:1,justifyContent:"center"}, onClick:()=>{sendOneEmail(preview);setPreview(null);} }, "\u{1F4E4} Send This Email"),
+            import_react.default.createElement("a", { href:mailtoLink(preview), target:"_blank", className:"btn btn-outline", style:{flex:1,justifyContent:"center",textDecoration:"none",textAlign:"center"} }, "\u{1F4EC} Open in Mail App"),
+            import_react.default.createElement("button", { className:"btn btn-outline", style:{flex:1,justifyContent:"center",color:"#f87171",borderColor:"#f87171"}, onClick:()=>downloadPdf(preview) }, "\u{1F4C4} Download PDF")
+          )
+        )
+      ),
+
+      /* MAIN PAGE */
+      import_react.default.createElement("div", { className:"card", style:{marginBottom:16} },
+        import_react.default.createElement("div", { style:{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:12} },
+          import_react.default.createElement("div", null,
+            import_react.default.createElement("div", { className:"card-title", style:{marginBottom:2} }, "\u{1F4E7} Monthly Email Reports"),
+            import_react.default.createElement("div", { style:{fontSize:12,color:"#64748b"} }, "Generate and send personal monthly summaries to all active dropshippers")
+          ),
+          import_react.default.createElement("button", { className:"btn btn-outline btn-sm", onClick:()=>setShowSetup(true) },
+            ejsReady ? "✅ EmailJS Connected" : "⚙️ Setup EmailJS"
+          )
+        )
+      ),
+
+      import_react.default.createElement("div", { className:"card", style:{marginBottom:16} },
+        import_react.default.createElement("div", { style:{display:"flex",gap:12,alignItems:"flex-end",flexWrap:"wrap"} },
+          import_react.default.createElement("div", { className:"form-group", style:{marginBottom:0} },
+            import_react.default.createElement("label", null, "Month"),
+            import_react.default.createElement("select", { value:selMonth, onChange:e=>setSelMonth(parseInt(e.target.value)), style:{width:"auto"} },
+              MONTHS.map((m,i) => import_react.default.createElement("option", {key:i,value:i}, m))
+            )
+          ),
+          import_react.default.createElement("div", { className:"form-group", style:{marginBottom:0} },
+            import_react.default.createElement("label", null, "Year"),
+            import_react.default.createElement("select", { value:selYear, onChange:e=>setSelYear(parseInt(e.target.value)), style:{width:"auto"} },
+              [2024,2025,2026,2027].map(y => import_react.default.createElement("option", {key:y,value:y}, y))
+            )
+          ),
+          import_react.default.createElement("button", { className:"btn btn-primary", onClick:loadReports, disabled:loading },
+            loading ? import_react.default.createElement(import_react.default.Fragment, null, import_react.default.createElement("span", {className:"spinner"}), " Loading...") : "\u{1F4CA} Load Reports"
+          ),
+          reports.length > 0 && import_react.default.createElement(import_react.default.Fragment, null,
+            import_react.default.createElement("button", { className:"btn btn-success", onClick:sendAll, disabled:!ejsReady || active.length===0 },
+              !ejsReady ? "⚠️ Setup EmailJS first" : "\u{1F4E4} Send All " + active.length + " Reports"
+            ),
+            sent > 0 && import_react.default.createElement("span", { style:{fontSize:13,color:"#34d399",fontWeight:700} }, "✅ " + sent + "/" + active.length + " sent")
+          )
+        )
+      ),
+
+      reports.length > 0 && import_react.default.createElement("div", { className:"card" },
+        import_react.default.createElement("div", { style:{display:"flex",justifyContent:"space-between",marginBottom:14} },
+          import_react.default.createElement("div", { className:"card-title", style:{marginBottom:0} }, MONTHS[selMonth] + " " + selYear + " — " + reports.length + " dropshippers (" + active.length + " with orders)"),
+        ),
+        import_react.default.createElement("div", { className:"table-wrap" },
+          import_react.default.createElement("table", null,
+            import_react.default.createElement("thead", null,
+              import_react.default.createElement("tr", null,
+                ["Dropshipper","Email","Orders","Revenue","Profit","Unpaid Invoices","Status","Actions"].map(h =>
+                  import_react.default.createElement("th", {key:h}, h)
+                )
+              )
+            ),
+            import_react.default.createElement("tbody", null,
+              reports.map(r =>
+                import_react.default.createElement("tr", { key:r.id, style:{opacity: r.hasActivity ? 1 : 0.45} },
+                  import_react.default.createElement("td", { style:{fontWeight:600} }, r.name||r.email.split("@")[0]),
+                  import_react.default.createElement("td", { style:{fontSize:11,color:"#64748b"} }, r.email),
+                  import_react.default.createElement("td", { style:{textAlign:"center",fontWeight:700,color: r.orders>0?"#38bdf8":"#475569"} }, r.orders),
+                  import_react.default.createElement("td", { style:{textAlign:"right"} }, r.revenue>0 ? "RS "+r.revenue.toLocaleString() : "—"),
+                  import_react.default.createElement("td", { style:{textAlign:"right",color:r.profit>=0?"#34d399":"#f87171",fontWeight:700} }, r.profit>0 ? "RS "+r.profit.toLocaleString() : "—"),
+                  import_react.default.createElement("td", { style:{textAlign:"right",color:r.unpaid>0?"#f87171":"#34d399",fontWeight:700} }, r.unpaid>0 ? "RS "+r.unpaid.toLocaleString() : "✅ Clear"),
+                  import_react.default.createElement("td", null, statusIcon(r.id) || (r.hasActivity ? import_react.default.createElement("span", {style:{color:"#fbbf24",fontSize:12}}, "⏳ Pending") : import_react.default.createElement("span", {style:{color:"#475569",fontSize:11}}, "No orders"))),
+                  import_react.default.createElement("td", null,
+                    import_react.default.createElement("div", { style:{display:"flex",gap:6} },
+                      import_react.default.createElement("button", { className:"btn btn-outline btn-xs", onClick:()=>setPreview(r) }, "\u{1F441}️ Preview"),
+                      r.hasActivity && import_react.default.createElement("button", { className:"btn btn-primary btn-xs", onClick:()=>sendOneEmail(r), disabled:!ejsReady||sendStatus[r.id]==="sending"||sendStatus[r.id]==="sent" },
+                        sendStatus[r.id]==="sent" ? "✅" : "\u{1F4E4} Send"
+                      ),
+                      import_react.default.createElement("a", { href:mailtoLink(r), target:"_blank", className:"btn btn-outline btn-xs", style:{textDecoration:"none"} }, "\u{1F4EC}"),
+                      import_react.default.createElement("button", { className:"btn btn-outline btn-xs", onClick:()=>downloadPdf(r), style:{color:"#f87171",borderColor:"#f87171"} }, "\u{1F4C4} PDF")
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    );
+  }
+
     function App() {
     const [user, setUser] = (0, import_react.useState)(null);
     const [page, setPage] = (0, import_react.useState)("dashboard");
@@ -15725,6 +16123,7 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
         if (page === "ds_summary") return /* @__PURE__ */ import_react.default.createElement(DropshipperSummary, { toast: addToast });
         if (page === "suppliers") return /* @__PURE__ */ import_react.default.createElement(SupplierManagement, { toast: addToast });
         if (page === "monthly_report") return /* @__PURE__ */ import_react.default.createElement(MonthlyReport, { user, toast: addToast });
+        if (page === "email_reports") return /* @__PURE__ */ import_react.default.createElement(EmailReports, { toast: addToast });
         if (page === "manage_admins") return /* @__PURE__ */ import_react.default.createElement(ManageAdmins, { toast: addToast });
         if (page === "feedback") return /* @__PURE__ */ import_react.default.createElement(AdminFeedbackView, { toast: addToast });
       }
