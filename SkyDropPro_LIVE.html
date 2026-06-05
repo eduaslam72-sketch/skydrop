@@ -13546,7 +13546,7 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
       )
     );
   }
-  function Sidebar({ user, page, setPage, badges, onLogout }) {
+  function Sidebar({ user, page, setPage, badges, onLogout, previewDS, setPreviewDS }) {
     const items = NAV[user.role] || [];
     const [openG, setOpenG] = (0, import_react.useState)(() => {
       const init = {};
@@ -13562,7 +13562,7 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
         return /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, { key: it.group }, /* @__PURE__ */ import_react.default.createElement("div", { onClick: () => setOpenG((p) => ({ ...p, [it.group]: !p[it.group] })), style: { display: "flex", alignItems: "center", gap: 10, padding: "9px 14px", cursor: "pointer", background: gActive && !open ? "rgba(14,165,233,.13)" : "transparent", borderLeft: gActive && !open ? "3px solid #0ea5e9" : "3px solid transparent", borderRadius: 6, margin: "1px 6px" } }, /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 16 } }, it.icon), /* @__PURE__ */ import_react.default.createElement("span", { style: { flex: 1, fontSize: 13, fontWeight: 700, color: gActive && !open ? "#38bdf8" : "#94a3b8" } }, it.group), bTotal > 0 && !open && /* @__PURE__ */ import_react.default.createElement("span", { className: "nav-badge" }, bTotal), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 10, color: "#475569", display: "inline-block", transform: open ? "rotate(90deg)" : "rotate(0)", transition: "transform .2s" } }, "►")), open && /* @__PURE__ */ import_react.default.createElement("div", { style: { marginLeft: 12, borderLeft: "2px solid #1e3a5f", paddingLeft: 4, marginBottom: 4 } }, it.children.map((ch) => /* @__PURE__ */ import_react.default.createElement("div", { key: ch.id, className: "nav-item" + (page === ch.id ? " active" : ""), onClick: () => setPage(ch.id), style: { padding: "7px 12px", fontSize: 12, margin: "1px 4px" } }, /* @__PURE__ */ import_react.default.createElement("span", null, ch.icon), /* @__PURE__ */ import_react.default.createElement("span", { style: { flex: 1 } }, ch.label), ch.bkey && badges[ch.bkey] > 0 && /* @__PURE__ */ import_react.default.createElement("span", { className: "nav-badge" }, badges[ch.bkey])))));
       }
       return /* @__PURE__ */ import_react.default.createElement("div", { key: it.id, className: "nav-item" + (page === it.id ? " active" : ""), onClick: () => setPage(it.id) }, /* @__PURE__ */ import_react.default.createElement("span", null, it.icon), /* @__PURE__ */ import_react.default.createElement("span", { style: { flex: 1 } }, it.label), it.bkey && badges[it.bkey] > 0 && /* @__PURE__ */ import_react.default.createElement("span", { className: "nav-badge" }, badges[it.bkey]));
-    })), /* @__PURE__ */ import_react.default.createElement("div", { className: "sidebar-footer" }, /* @__PURE__ */ import_react.default.createElement("div", { style: { marginBottom: 4, fontWeight: 600, color: "#fff" } }, user.name || user.email), /* @__PURE__ */ import_react.default.createElement("div", { style: { marginBottom: 8, fontSize: 11 } }, user.email), /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-outline btn-sm", onClick: onLogout }, "Sign Out")));
+    })), /* @__PURE__ */ import_react.default.createElement("div", { className: "sidebar-footer" }, previewDS && /* @__PURE__ */ import_react.default.createElement("div", { style: { background: "rgba(251,191,36,.15)", border: "1px solid #f59e0b", borderRadius: 8, padding: "8px 10px", marginBottom: 10, fontSize: 11, color: "#fbbf24", textAlign: "center", fontWeight: 700 } }, "👁 PREVIEW — Dropshipper View"), user.role === "admin" && /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => { setPreviewDS(!previewDS); setPage("dashboard"); }, style: { width: "100%", padding: "9px 12px", border: "none", borderRadius: 8, marginBottom: 8, fontWeight: 700, fontSize: 12, cursor: "pointer", background: previewDS ? "linear-gradient(135deg,#d97706,#f59e0b)" : "linear-gradient(135deg,#0369a1,#0ea5e9)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 } }, previewDS ? "🔙 Back to Admin View" : "👁 View as Dropshipper"), /* @__PURE__ */ import_react.default.createElement("div", { style: { marginBottom: 4, fontWeight: 600, color: "#fff" } }, user.name || user.email), /* @__PURE__ */ import_react.default.createElement("div", { style: { marginBottom: 8, fontSize: 11 } }, user.email), /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-outline btn-sm", onClick: onLogout }, "Sign Out")));
   }
   function AdminDashboard({ toast }) {
     const [orders, setOrders] = (0, import_react.useState)([]);
@@ -16217,6 +16217,7 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
     const [badges, setBadges] = (0, import_react.useState)({});
     const [showWelcome, setShowWelcome] = (0, import_react.useState)(false);
     const [isRecovery, setIsRecovery] = (0, import_react.useState)(false);
+    const [previewDS, setPreviewDS] = (0, import_react.useState)(false);
     (0, import_react.useEffect)(() => {
       const hash = window.location.hash;
       if (hash.includes("type=recovery") && hash.includes("access_token")) {
@@ -16284,7 +16285,7 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
       localStorage.setItem("show_welcome_" + u.id, "1");
     }, toast: addToast }));
     function renderPage() {
-      const r = user.role;
+      const r = previewDS ? "dropshipper" : user.role;
       if (r === "admin") {
         if (page === "dashboard") return /* @__PURE__ */ import_react.default.createElement(AdminDashboard, { toast: addToast });
         if (page === "my_orders") return /* @__PURE__ */ import_react.default.createElement(DropshipperDashboard, { user, toast: addToast });
@@ -16326,9 +16327,9 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
       }
       return /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "Page not found");
     }
-    const pageLabel = NAV[user.role]?.find((n) => n.id === page)?.label || "Dashboard";
+    const pageLabel = NAV[previewDS ? "dropshipper" : user.role]?.find((n) => n.id === page)?.label || "Dashboard";
     const roleColors = { admin: "#dbeafe", dropshipper: "#d1fae5", warehouse: "#ede9fe", supplier: "#fef3c7" };
-    return /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("style", null, CSS), /* @__PURE__ */ import_react.default.createElement(Toasts, { list: toasts }), showWelcome && user && /* @__PURE__ */ import_react.default.createElement(WelcomeModal, { user, onClose: () => setShowWelcome(false) }), /* @__PURE__ */ import_react.default.createElement(ChatBot, { user }), /* @__PURE__ */ import_react.default.createElement("div", { className: "app" }, /* @__PURE__ */ import_react.default.createElement(Sidebar, { user, page, setPage, badges, onLogout: logout }), /* @__PURE__ */ import_react.default.createElement("div", { className: "main" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "topbar" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "topbar-title" }, "SkyDrop Pro \u2014 ", pageLabel), /* @__PURE__ */ import_react.default.createElement("div", { className: "flex gap-2 items-center" }, (user.role === "dropshipper" || user.role === "admin") && /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 15, fontWeight: 800, background: "linear-gradient(90deg,#f59e0b,#fbbf24,#f59e0b)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", letterSpacing: 0.3 } }, "Hi, ", user.name || user.email?.split("@")[0], " \u{1F44B}"), /* @__PURE__ */ import_react.default.createElement("span", { className: "badge", style: { background: roleColors[user.role] || "#0f172a", color: "#e2e8f0", border: "1px solid #334155", fontSize: 11, textTransform: "capitalize" } }, user.role))), /* @__PURE__ */ import_react.default.createElement("div", { className: "content", key: page }, renderPage()))));
+    return /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("style", null, CSS), /* @__PURE__ */ import_react.default.createElement(Toasts, { list: toasts }), showWelcome && user && /* @__PURE__ */ import_react.default.createElement(WelcomeModal, { user, onClose: () => setShowWelcome(false) }), /* @__PURE__ */ import_react.default.createElement(ChatBot, { user }), /* @__PURE__ */ import_react.default.createElement("div", { className: "app" }, /* @__PURE__ */ import_react.default.createElement(Sidebar, { user, page, setPage, badges, onLogout: logout, previewDS, setPreviewDS }), /* @__PURE__ */ import_react.default.createElement("div", { className: "main" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "topbar" }, /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "topbar-title" }, "SkyDrop Pro — ", pageLabel), previewDS && /* @__PURE__ */ import_react.default.createElement("span", { style: { background: "linear-gradient(135deg,#d97706,#f59e0b)", color: "#fff", borderRadius: 99, padding: "3px 12px", fontSize: 11, fontWeight: 800 } }, "👁 ADMIN PREVIEW — DS VIEW")), /* @__PURE__ */ import_react.default.createElement("div", { className: "flex gap-2 items-center" }, (user.role === "dropshipper" || user.role === "admin") && /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 15, fontWeight: 800, background: "linear-gradient(90deg,#f59e0b,#fbbf24,#f59e0b)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", letterSpacing: 0.3 } }, "Hi, ", user.name || user.email?.split("@")[0], " \u{1F44B}"), /* @__PURE__ */ import_react.default.createElement("span", { className: "badge", style: { background: previewDS ? roleColors["dropshipper"] : (roleColors[user.role] || "#0f172a"), color: "#e2e8f0", border: "1px solid #334155", fontSize: 11, textTransform: "capitalize" } }, previewDS ? "dropshipper 👁" : user.role))), /* @__PURE__ */ import_react.default.createElement("div", { className: "content", key: page }, renderPage()))));
   }
   import_client.default.createRoot(document.getElementById("root")).render(/* @__PURE__ */ import_react.default.createElement(ErrorBoundary, null, /* @__PURE__ */ import_react.default.createElement(App, null)));
 })();
@@ -16402,6 +16403,76 @@ react-dom/cjs/react-dom-client.production.js:
     localStorage.setItem('skyDrop_theme', isLight ? 'light' : 'dark');
   };
   document.body.appendChild(btn);
+})();
+</script>
+<script>
+(function(){
+var SB="https://hyxteancjleykldhkvfs.supabase.co";
+var KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh5eHRlYW5jamxleWtsZGhrdmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4NDQwNTksImV4cCI6MjA5MzQyMDA1OX0.tvPZFNWfXGyemglClHfbUyEeg3T2W-pTjMm9m1F2XmQ";
+var wrap=document.createElement("div");
+wrap.style.cssText="position:fixed;bottom:22px;right:22px;z-index:99999;font-family:'Segoe UI',sans-serif;display:flex;flex-direction:column;align-items:flex-end;gap:8px";
+var panel=document.createElement("div");
+panel.style.cssText="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:18px;width:290px;box-shadow:0 10px 40px rgba(0,0,0,.6);display:none";
+panel.innerHTML='<div style="font-size:13px;font-weight:800;color:#38bdf8;margin-bottom:12px">⚙️ Admin Quick Actions</div><div id="skySt" style="font-size:11px;color:#64748b;min-height:16px;margin-bottom:6px"></div><div style="height:6px;background:#0f172a;border-radius:99px;overflow:hidden;margin-bottom:12px"><div id="skyFill" style="height:100%;background:linear-gradient(90deg,#059669,#10b981);border-radius:99px;width:0%;transition:width .2s"></div></div><button id="skyPushBtn" style="width:100%;padding:10px;border:none;border-radius:8px;background:linear-gradient(135deg,#059669,#10b981);color:#fff;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px">🚀 Push All SKU Descriptions to Supabase</button><button id="skyCloseBtn" style="width:100%;padding:8px;border:1px solid #334155;border-radius:8px;background:transparent;color:#64748b;font-size:12px;cursor:pointer">Close</button>';
+var fab=document.createElement("button");
+fab.innerHTML="⚙️ Admin Tools";
+fab.style.cssText="background:linear-gradient(135deg,#0369a1,#0ea5e9);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(14,165,233,.4)";
+wrap.appendChild(panel);wrap.appendChild(fab);
+document.body.appendChild(wrap);
+fab.onclick=function(){panel.style.display=panel.style.display==="none"?"block":"none";};
+document.getElementById("skyCloseBtn").onclick=function(){panel.style.display="none";};
+document.getElementById("skyPushBtn").onclick=async function(){
+  var btn=this;btn.disabled=true;btn.textContent="Pushing...";
+  document.getElementById("skySt").style.color="#38bdf8";
+  var r=await fetch(SB+"/rest/v1/skus?select=sku_code,name,size,category,warehouse,stock&limit=500",{headers:{apikey:KEY,Authorization:"Bearer "+KEY}});
+  var skus=await r.json();
+  var done=0,errs=0;
+  for(var i=0;i<skus.length;i++){
+    var p=skus[i];
+    try{
+      var res=await fetch(SB+"/rest/v1/skus?sku_code=eq."+encodeURIComponent(p.sku_code),{method:"PATCH",headers:{apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json",Prefer:"return=representation"},body:JSON.stringify({description:mkD(p)})});
+      var d=await res.json();if(d&&d.length)done++;else errs++;
+    }catch(e){errs++;}
+    document.getElementById("skyFill").style.width=Math.round((i+1)/skus.length*100)+"%";
+    document.getElementById("skySt").textContent=(i+1)+"/"+skus.length+" — "+done+" updated";
+    if((i+1)%10===0)await new Promise(function(r){setTimeout(r,30);});
+  }
+  document.getElementById("skySt").textContent="✅ Done — "+done+" updated | "+errs+" errors";
+  document.getElementById("skySt").style.color="#34d399";
+  btn.disabled=false;btn.textContent="✅ Complete — Run Again";
+};
+function mkD(p){
+  var nm=(p.name||"").trim(),sz=p.size||"",cat=p.category||"",wh=p.warehouse||"Ahsan Aslam — USA",stk=(p.stock>0)?p.stock+" units available":"Out of stock";
+  var n=nm.toUpperCase(),backing=cat==="Iron-On Patches"?"Iron-on adhesive":"Dual iron-on + sew-on";
+  var dk=["RETIRED","I AM DEAF","BLIND DOG","STAFF X LAB","IN TRAINING","DO NOT FEED","DO NOT TOUCH","I NEED SPACE","SEIZURE SUPPORT","XL BULLY","AMERICAN BULL DOG","EMOTIONAL SUPPORT"];
+  if(cat==="Dog Vest Patches"||dk.some(function(k){return n.indexOf(k)>=0;})){
+    var sc=["S","M","L"].indexOf(p.size)>=0?p.size:"M",pt=nm.replace(/ [SML]$/,"").trim();
+    var pm={"RETIRED":"Retired military/police dog","I AM DEAF":"Deaf dog alert","BLIND DOG":"Blind dog alert","STAFF X LAB":"Staffie x Lab ID","IN TRAINING":"Dog in training","DO NOT FEED":"Dietary restriction","DO NOT TOUCH":"Needs personal space","I NEED SPACE":"Anxious dog","SEIZURE SUPPORT":"Seizure response dog","XL BULLY":"Not XL Bully","AMERICAN BULL DOG":"American Bulldog ID","EMOTIONAL SUPPORT":"Emotional support animal"};
+    var pur="Dog ID";for(var k in pm){if(n.indexOf(k)>=0){pur=pm[k];break;}}
+    return[nm+" — Dog Vest Patch","Patch Text: "+pt,"Size: "+sc,"Purpose: "+pur,"Material: Embroidery on twill","Backing: Hook-and-loop Velcro","Border: Merrowed","Care: Spot clean","Origin: "+wh,"Stock: "+stk].join(" | ");
+  }
+  if(cat==="Smocked Bags"){var c=nm.replace(/smocked bag/i,"").trim()||nm;return[nm+" — Smocked Bag","Color: "+c,"Dimensions: "+sz,"Construction: Traditional smocking","Care: Gentle cold wash","Origin: "+wh,"Stock: "+stk].join(" | ");}
+  if(cat==="Scarves"){var c2=nm.replace(/scarf/i,"").trim()||nm;return[nm+" — Fashion Scarf","Color: "+c2,"Dimensions: "+sz,"Material: Soft fabric","Styling: Neck wrap, shawl, head wrap","Care: Gentle cold wash","Origin: "+wh,"Stock: "+stk].join(" | ");}
+  if(n.indexOf("RFID")>=0||n.indexOf("WALLET")>=0)return[nm+" — RFID Wallet","Size: "+sz,"Blocks 13.56MHz NFC/RFID","Slim profile","Origin: "+wh,"Stock: "+stk].join(" | ");
+  if(n.indexOf("KNIFE")>=0){var kc=n.indexOf("RED")>=0?"Red":"Black";return[nm+" — Folding Knife","Color: "+kc,"Folded: "+sz,"Quality steel blade","Origin: "+wh,"Stock: "+stk].join(" | ");}
+  var brand="",design="",colors="";
+  if(n.indexOf("TOMMY")>=0){brand="Tommy Hilfiger";design=n.indexOf("SHIELD")>=0?"TH Shield Crest":n.indexOf("DARK NAVY")>=0?"Tommy Text Dark Navy":"Tommy Wordmark";colors="Navy, red and white";}
+  else if(n.indexOf("NIKE")>=0){brand="Nike";design="Nike Swoosh";colors="Black and white";}
+  else if(n.indexOf("MONCLER")>=0){brand="Moncler";design="Moncler Bird Emblem";colors=n.indexOf("BLACK")>=0?"Black and white":"Classic palette";}
+  else if(n.indexOf("NORTH FACE")>=0){brand="The North Face";var cf=n.indexOf("WHITE")>=0?"White":n.indexOf("RED")>=0?"Red":n.indexOf("YELLOW")>=0?"Yellow":"Black";design="TNF Logo "+cf;colors=cf+" and white";}
+  else if(n.indexOf("CANADA GOOSE")>=0){brand="Canada Goose";design="CG Disc Logo";colors=n.indexOf("BLACK")>=0?"Black and white":"Blue and red";}
+  else if(n.indexOf("BELSTAFF")>=0){brand="Belstaff";design=n.indexOf("EAGLE")>=0?"Eagle Design":"IS Logo";colors=n.indexOf("YELLOW")>=0?"Yellow":n.indexOf("SKIN")>=0?"Skin":"Gray";}
+  else if(n.indexOf("LOUIS VUITTON")>=0||p.sku_code.indexOf("EPLV")===0){brand="Louis Vuitton";design=n.indexOf("HEART")>=0?"LV Heart":n.indexOf("CIRCLE")>=0?"LV Circle":"LV Monogram";colors="LV tan and brown";}
+  else if(n.indexOf("HARLEY")>=0){brand="Harley-Davidson";design=n.indexOf("OVAL")>=0?"Oval Logo":"Bar-and-Shield";colors="Orange, black, white";}
+  else if(n.indexOf("GUCCI")>=0||p.sku_code==="IOG-01"||p.sku_code==="EPG-01"){brand="Gucci";design="GG Monogram";colors="Tan and brown";}
+  else if(n.indexOf("USA")>=0||n.indexOf("TEXAS")>=0||n.indexOf("CUBA")>=0){brand="Patriotic";design=n.indexOf("CROWN")>=0?"USA Crown":n.indexOf("WAVE")>=0?"USA Wave":n.indexOf("CUBA")>=0?"Cuba Flag":"USA Flag";colors="Red, white, blue";}
+  else if(n.indexOf("NFL")>=0){brand="NFL";design="NFL Shield";colors="Navy, red, white";}
+  else if(n.indexOf("HOCKEY UTAH")>=0){brand="Utah Hockey Club";design="UHC Logo";colors="Blue and white";}
+  else if(n.indexOf("SUPER BOWL")>=0||n.indexOf("LIX")>=0){brand="Super Bowl LIX";design="SB LIX Design";colors="Gold and Eagles green";}
+  else{brand=cat;design=nm+" Design";colors="Multi-colour";}
+  var app=cat==="Iron-On Patches"?"Application: Iron-On 30-45 sec max heat, cool fully":"Application: Iron-On 30-45 sec, cool. Or sew around edges";
+  return[nm+" — Premium "+(cat||"Patch"),brand?"Brand: "+brand:"","Design: "+design,"Size: "+sz,"Backing: "+backing,colors?"Colors: "+colors:"","Border: Merrowed overlock","Threads: Colorfast",app,"Care: Hand wash only","Origin: "+wh,"Stock: "+stk].filter(Boolean).join(" | ");
+}
 })();
 </script>
 </body></html>
