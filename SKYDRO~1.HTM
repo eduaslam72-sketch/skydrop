@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SkyCart — Ready-to-List Generator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;padding:24px}
+.header{display:flex;align-items:center;gap:14px;margin-bottom:28px}
+.header h1{font-size:22px;font-weight:800;color:#38bdf8}
+.header p{font-size:13px;color:#64748b;margin-top:2px}
+.card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px;margin-bottom:16px}
+.card h2{font-size:14px;font-weight:700;color:#38bdf8;margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{font-size:12px;color:#94a3b8;font-weight:600;display:block;margin-bottom:4px}
+select,input{width:100%;padding:9px 12px;background:#0f172a;border:1px solid #334155;border-radius:8px;color:#e2e8f0;font-size:13px;outline:none;margin-bottom:12px}
+select:focus,input:focus{border-color:#38bdf8}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-primary{background:linear-gradient(135deg,#0369a1,#0ea5e9);color:#fff;width:100%}
+.btn-primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px rgba(14,165,233,.35)}
+.btn-success{background:linear-gradient(135deg,#059669,#10b981);color:#fff}
+.btn-success:hover:not(:disabled){transform:translateY(-1px)}
+.btn-warning{background:linear-gradient(135deg,#d97706,#f59e0b);color:#fff}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.badge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;background:rgba(14,165,233,.15);color:#38bdf8;margin-right:6px}
+.badge-green{background:rgba(5,150,105,.15);color:#34d399}
+.badge-amber{background:rgba(245,158,11,.15);color:#fbbf24}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#0f172a;color:#64748b;padding:8px 10px;text-align:left;border-bottom:1px solid #334155;font-weight:600}
+td{padding:7px 10px;border-bottom:1px solid #1e293b;vertical-align:middle}
+tr:hover td{background:rgba(56,189,248,.04)}
+.log{background:#0f172a;border:1px solid #1e293b;border-radius:8px;padding:12px;height:160px;overflow-y:auto;font-size:11px;font-family:monospace;margin-top:12px}
+.log-ok{color:#34d399}.log-err{color:#f87171}.log-info{color:#38bdf8}.log-warn{color:#fbbf24}
+.progress-bar{height:6px;background:#0f172a;border-radius:99px;overflow:hidden;margin:8px 0}
+.progress-fill{height:100%;background:linear-gradient(90deg,#0369a1,#38bdf8);border-radius:99px;transition:width .3s;width:0%}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+#preview{display:none}
+.preview-tabs{display:flex;gap:8px;margin-bottom:12px}
+.tab-btn{padding:7px 16px;border:1px solid #334155;border-radius:6px;background:#0f172a;color:#94a3b8;font-size:12px;cursor:pointer;font-weight:600}
+.tab-btn.active{background:#0369a1;color:#fff;border-color:#0369a1}
+.tab-content{display:none}
+.tab-content.active{display:block}
+pre{background:#0f172a;border:1px solid #1e293b;border-radius:8px;padding:14px;font-size:11px;white-space:pre-wrap;word-break:break-word;line-height:1.6;max-height:400px;overflow-y:auto;color:#cbd5e1}
+.stat{font-size:28px;font-weight:800;color:#38bdf8}
+.stat-label{font-size:11px;color:#64748b;margin-top:2px}
+</style>
+</head>
+<body>
+<div class="header">
+  <svg width="40" height="58" viewBox="0 0 66 76"><polygon points="33,2 61,22 33,70 5,22" fill="#0c4a6e"/><polygon points="33,10 55,24 33,60 11,24" fill="#0369a1"/><polygon points="33,18 47,26 33,50 19,26" fill="#0ea5e9"/><text x="33" y="32" font-family="Segoe UI" font-size="16" font-weight="900" fill="#fff" text-anchor="middle">S</text></svg>
+  <div><h1>SkyCart — Ready-to-List Generator</h1><p>Auto-generate eBay descriptions & image instructions for any SKU — USA, UK, and future stock</p></div>
+</div>
+
+<!-- Stats row -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
+  <div class="card" style="padding:16px"><div class="stat" id="statTotal">—</div><div class="stat-label">Total SKUs in DB</div></div>
+  <div class="card" style="padding:16px"><div class="stat" id="statActive" style="color:#34d399">—</div><div class="stat-label">Active / In Stock</div></div>
+  <div class="card" style="padding:16px"><div class="stat" id="statWH">—</div><div class="stat-label">Warehouses</div></div>
+  <div class="card" style="padding:16px"><div class="stat" id="statCats">—</div><div class="stat-label">Categories</div></div>
+</div>
+
+<!-- Filters + Actions -->
+<div class="card">
+  <h2>🔍 Filter & Generate</h2>
+  <div class="grid2">
+    <div>
+      <label>Warehouse</label>
+      <select id="filterWH"><option value="">All Warehouses</option></select>
+    </div>
+    <div>
+      <label>Category</label>
+      <select id="filterCat"><option value="">All Categories</option></select>
+    </div>
+    <div>
+      <label>Status</label>
+      <select id="filterStatus">
+        <option value="active">Active Only</option>
+        <option value="">All (including inactive)</option>
+        <option value="inactive">Inactive Only</option>
+      </select>
+    </div>
+    <div>
+      <label>Search SKU or Name</label>
+      <input id="filterSearch" placeholder="e.g. TOMMY or EP-TTHS..." oninput="applyFilters()"/>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn btn-primary" onclick="loadSKUs()" style="flex:1">🔄 Load from Supabase</button>
+    <button class="btn btn-success" onclick="generateSelected()" id="genBtn" style="flex:1" disabled>⚡ Generate Selected</button>
+    <button class="btn btn-warning" onclick="generateAll()" id="genAllBtn" style="flex:1" disabled>📦 Generate ALL Filtered</button>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="genProgress"></div></div>
+  <div id="genStatus" style="font-size:12px;color:#64748b;margin-top:4px"></div>
+  <div class="log" id="genLog"></div>
+</div>
+
+<!-- Results table -->
+<div class="card" id="tableCard" style="display:none">
+  <h2>📋 SKU List <span id="countBadge" class="badge">0</span></h2>
+  <div style="display:flex;gap:8px;margin-bottom:10px">
+    <button class="btn btn-primary" onclick="selectAll(true)" style="width:auto;padding:7px 16px;font-size:12px">Select All</button>
+    <button class="btn" onclick="selectAll(false)" style="width:auto;padding:7px 16px;font-size:12px;background:#334155;color:#e2e8f0">Deselect All</button>
+  </div>
+  <div style="overflow-x:auto">
+    <table id="skuTable">
+      <thead><tr>
+        <th><input type="checkbox" id="masterCheck" onchange="selectAll(this.checked)"/></th>
+        <th>SKU</th><th>Name</th><th>Category</th><th>Size</th><th>Stock</th><th>Status</th><th>Warehouse</th><th>Action</th>
+      </tr></thead>
+      <tbody id="skuBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Preview -->
+<div class="card" id="preview">
+  <h2>📄 Preview: <span id="previewTitle" style="color:#38bdf8"></span></h2>
+  <div class="preview-tabs">
+    <button class="tab-btn active" onclick="switchTab('desc')">Description</button>
+    <button class="tab-btn" onclick="switchTab('img')">Image Instructions</button>
+  </div>
+  <div class="tab-content active" id="tab-desc"><pre id="descContent"></pre></div>
+  <div class="tab-content" id="tab-img"><pre id="imgContent"></pre></div>
+  <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+    <button class="btn btn-success" onclick="downloadCurrent('desc')" style="width:auto;padding:9px 18px">⬇ Download Description.txt</button>
+    <button class="btn btn-success" onclick="downloadCurrent('img')" style="width:auto;padding:9px 18px">⬇ Download Image_Instructions.txt</button>
+    <button class="btn btn-warning" onclick="downloadBothCurrent()" style="width:auto;padding:9px 18px" id="zipSingleBtn">📁 Download Both as ZIP</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+const SB_URL = "https://hyxteancjleykldhkvfs.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh5eHRlYW5jamxleWtsZGhrdmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4NDQwNTksImV4cCI6MjA5MzQyMDA1OX0.tvPZFNWfXGyemglClHfbUyEeg3T2W-pTjMm9m1F2XmQ";
+
+let ALL_SKUS = [];
+let FILTERED = [];
+let GENERATED = {};
+let CURRENT_SKU = null;
+
+function log(msg, cls='log-info'){
+  const el=document.getElementById('genLog');
+  el.innerHTML+=`<div class="${cls}">${new Date().toLocaleTimeString()} — ${msg}</div>`;
+  el.scrollTop=el.scrollHeight;
+}
+
+async function sbFetch(endpoint){
+  const r=await fetch(SB_URL+endpoint,{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function loadSKUs(){
+  log('Loading SKUs from Supabase...');
+  document.getElementById('genBtn').disabled=true;
+  document.getElementById('genAllBtn').disabled=true;
+  try{
+    const data=await sbFetch('/rest/v1/skus?select=*&order=sku_code.asc&limit=1000');
+    ALL_SKUS=data;
+    // Populate filters
+    const whs=[...new Set(data.map(x=>x.warehouse).filter(Boolean))];
+    const cats=[...new Set(data.map(x=>x.category).filter(Boolean))];
+    const whSel=document.getElementById('filterWH');
+    const catSel=document.getElementById('filterCat');
+    whs.forEach(w=>{ const o=document.createElement('option'); o.value=w; o.textContent=w; whSel.appendChild(o); });
+    cats.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; catSel.appendChild(o); });
+    // Stats
+    document.getElementById('statTotal').textContent=data.length;
+    document.getElementById('statActive').textContent=data.filter(x=>x.status==='active').length;
+    document.getElementById('statWH').textContent=whs.length;
+    document.getElementById('statCats').textContent=cats.length;
+    applyFilters();
+    log(`Loaded ${data.length} SKUs from database ✓`,'log-ok');
+    document.getElementById('genBtn').disabled=false;
+    document.getElementById('genAllBtn').disabled=false;
+  }catch(e){
+    log('Error loading SKUs: '+e.message,'log-err');
+  }
+}
+
+function applyFilters(){
+  const wh=document.getElementById('filterWH').value;
+  const cat=document.getElementById('filterCat').value;
+  const status=document.getElementById('filterStatus').value;
+  const search=document.getElementById('filterSearch').value.trim().toLowerCase();
+  FILTERED=ALL_SKUS.filter(p=>{
+    if(wh && p.warehouse!==wh) return false;
+    if(cat && p.category!==cat) return false;
+    if(status && p.status!==status) return false;
+    if(search && !p.sku_code.toLowerCase().includes(search) && !p.name.toLowerCase().includes(search)) return false;
+    return true;
+  });
+  renderTable();
+}
+
+document.getElementById('filterWH').addEventListener('change',applyFilters);
+document.getElementById('filterCat').addEventListener('change',applyFilters);
+document.getElementById('filterStatus').addEventListener('change',applyFilters);
+
+function renderTable(){
+  const tbody=document.getElementById('skuBody');
+  document.getElementById('countBadge').textContent=FILTERED.length;
+  document.getElementById('tableCard').style.display='block';
+  tbody.innerHTML=FILTERED.map(p=>{
+    const genMark=GENERATED[p.sku_code]?'<span class="badge badge-green">✓ Generated</span>':'';
+    return `<tr>
+      <td><input type="checkbox" class="sku-check" value="${p.sku_code}" checked/></td>
+      <td><b>${p.sku_code}</b></td>
+      <td>${p.name}</td>
+      <td><span style="font-size:11px;color:#64748b">${p.category||'—'}</span></td>
+      <td style="font-size:11px">${p.size||'—'}</td>
+      <td>${p.stock??'—'}</td>
+      <td><span class="badge ${p.status==='active'?'badge-green':'badge-amber'}">${p.status||'—'}</span></td>
+      <td style="font-size:11px;color:#64748b">${(p.warehouse||'—').replace('Ahsan Aslam — ','')}</td>
+      <td>${genMark}<button onclick="previewOne('${p.sku_code}')" style="padding:3px 10px;border:1px solid #334155;border-radius:4px;background:transparent;color:#38bdf8;cursor:pointer;font-size:11px">Preview</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function selectAll(v){
+  document.querySelectorAll('.sku-check').forEach(c=>c.checked=v);
+  document.getElementById('masterCheck').checked=v;
+}
+
+// ── DESCRIPTION ENGINE ──
+function getDescription(p){
+  const sku=p.sku_code||''; const name=(p.name||'').trim(); const size=p.size||''; const cat=p.category||'';
+  const n=name.toUpperCase();
+
+  const dogKeys=["RETIRED","I AM DEAF","BLIND DOG","STAFF X LAB","IN TRAINING","DO NOT FEED","DO NOT TOUCH","I NEED SPACE","SEIZURE SUPPORT","XL BULLY","AMERICAN BULL DOG","EMOTIONAL SUPPORT"];
+  if(cat==="Dog Vest Patches"||dogKeys.some(k=>n.includes(k))){
+    const sc=["S","M","L"].includes(p.size)?p.size:"M";
+    const ptMap={"RETIRED":"RETIRED","I AM DEAF":"I AM DEAF","BLIND DOG":"BLIND DOG","STAFF X LAB":"STAFF X LAB","IN TRAINING":"IN TRAINING","DO NOT FEED":"DO NOT FEED","DO NOT TOUCH":"DO NOT TOUCH","I NEED SPACE":"I NEED SPACE","SEIZURE SUPPORT":"SEIZURE SUPPORT","XL BULLY":"I AM NOT XL BULLY","AMERICAN BULL DOG":"AMERICAN BULL DOG","EMOTIONAL SUPPORT":"EMOTIONAL SUPPORT DOG"};
+    let pt=name; for(const[k,v]of Object.entries(ptMap)){ if(n.includes(k)){pt=v;break;} }
+    const purposeMap={
+      "RETIRED":"working dogs that have completed military or police service",
+      "I AM DEAF":"deaf dogs, alerting the public not to approach unexpectedly",
+      "BLIND DOG":"blind dogs, alerting others to approach slowly",
+      "STAFF X LAB":"Staffordshire Bull Terrier and Labrador cross breed dogs",
+      "IN TRAINING":"dogs undergoing professional training — public should not distract",
+      "DO NOT FEED":"dogs on strict diets or with food allergies",
+      "DO NOT TOUCH":"dogs with touch sensitivity or personal space requirements",
+      "I NEED SPACE":"anxious or reactive dogs requiring distance from people",
+      "SEIZURE SUPPORT":"trained seizure alert or response dogs",
+      "XL BULLY":"dogs that are not XL Bully breeds — clearing public misconceptions",
+      "AMERICAN BULL DOG":"American Bulldogs — providing clear breed identification",
+      "EMOTIONAL SUPPORT":"emotional support animals communicating their specialist role"
+    };
+    let purpose="providing safety communication for your dog";
+    for(const[k,v]of Object.entries(purposeMap)){if(n.includes(k)){purpose=v;break;}}
+    const sizeGuide={"S":"small dogs up to ~30 lbs — 3–4 inch loop panel harnesses","M":"medium dogs 30–60 lbs — 4–6 inch loop panel harnesses","L":"large dogs 60+ lbs — 6–8 inch loop panel harnesses"};
+    return `SKU: ${sku} | ${name.toUpperCase()} — DOG VEST PATCH SIZE ${sc}
+${'='.repeat(60)}
+
+PRODUCT OVERVIEW
+This '${pt}' dog vest patch is designed for ${purpose}. Available in Size ${sc}, it fits ${sizeGuide[sc]||sc}. High-visibility embroidered text, hook-and-loop (Velcro-compatible) backing, and merrowed border construction deliver a patch that communicates clearly and withstands daily outdoor use. Whether your dog is a working service animal, emotional support dog, or a pet with specific public needs, this patch ensures anyone approaching is immediately and clearly informed.
+
+High-contrast embroidery ensures the message '${pt}' is legible from several feet away. The hook-and-loop backing attaches instantly to any vest or harness loop panel — remove, reattach, or swap between vests as needed. Heavy-duty twill construction and merrowed border prevent fraying and maintain professional appearance through years of regular use.
+
+KEY FEATURES
+HIGH-VISIBILITY TEXT EMBROIDERY — Bold, high-density stitching delivers the message '${pt}' clearly and immediately. Every design decision — thread color, font weight, contrast — maximizes the speed at which strangers read and understand the message.
+
+HOOK-AND-LOOP BACKING — Instant, secure attachment to any loop-panel vest or harness. Press and hold for 3–5 seconds. Remove and reattach without degradation. Swap between vests or rotate message patches as needed.
+
+DURABLE TWILL CONSTRUCTION — Heavy-duty twill backing with professional embroidery built for daily outdoor use. Rain, UV exposure, and repeated velcro cycles do not compromise construction or legibility.
+
+SIZE ${sc} — CORRECT FIT — Fits ${sizeGuide[sc]||sc}. Proper sizing ensures the message is readable at a practical distance and sits correctly on the vest panel.
+
+USA WAREHOUSE — Ships from the Ahsan Aslam USA facility, inspected before dispatch.
+
+SPECIFICATIONS
+• SKU: ${sku} | Patch Text: ${pt} | Size: ${sc}
+• Material: High-density embroidery on twill | Backing: Hook-and-loop
+• Border: Merrowed overlock | Warehouse: ${p.warehouse||'Ahsan Aslam — USA'}
+
+COMPATIBILITY
+Fits all dog harnesses, service vests, and working dog gear with a standard loop panel. Press firmly to attach. For active working dogs, supplement with perimeter stitching for extra security.
+
+CARE: Spot clean or hand wash. Do not machine wash the patch itself. Reattach after washing the vest.`;
+  }
+
+  if(cat==="Smocked Bags"){
+    const col=name.replace("Smocked Bag ","").trim();
+    return `SKU: ${sku} | SMOCKED BAG — ${col.toUpperCase()}
+${'='.repeat(60)}
+
+PRODUCT OVERVIEW
+Handcrafted with traditional smocking technique, this ${col} Smocked Bag blends artisanal needlecraft with everyday practicality. The distinctive gathered, pleated texture — achieved through true smocking with elastic thread — delivers a uniquely tactile aesthetic that no mass-produced bag can replicate. Ideal as a beach bag, market tote, festival carry-all, or thoughtful handcrafted gift.
+
+At ${size}, the generous dimensions provide impressive carrying capacity. The elastic smocked construction expands to accommodate your load and returns to shape when empty. The ${col} colorway is produced with colorfast dyes that maintain vibrancy through regular washing and sunlight exposure.
+
+KEY FEATURES
+AUTHENTIC SMOCKING — True gathered, pleated smocking with elastic thread. Consistent even pleating and secure stitching throughout. Not printed or simulated — genuine needlework craft.
+
+EXPANDABLE CAPACITY — ${size} expanded capacity accommodates beach towels, market shopping, everyday carry, and more. Springs back to compact form when empty.
+
+VIBRANT ${col.toUpperCase()} — Colorfast dyes retain vibrancy through regular washing. The color you order is the color that lasts.
+
+LIGHTWEIGHT AND PACKABLE — Approximately 1.70 kg loaded. Packs down small for easy storage and travel.
+
+USA WAREHOUSE — Ships from the Ahsan Aslam USA facility, carefully packaged to preserve shape.
+
+SPECIFICATIONS
+• SKU: ${sku} | Color: ${col} | Dimensions: ${size}
+• Weight: ~1.70 kg | Construction: Traditional smocking
+• Warehouse: ${p.warehouse||'Ahsan Aslam — USA'}
+
+CARE: Gentle machine wash, cold water. Do not tumble dry. Hang or lay flat to dry in shade. Avoid direct iron on smocked panels.`;
+  }
+
+  if(cat==="Scarves"){
+    const col=name.replace("Scarf ","").trim();
+    return `SKU: ${sku} | FASHION SCARF — ${col.toUpperCase()}
+${'='.repeat(60)}
+
+PRODUCT OVERVIEW
+Complete any outfit with this elegant, versatile ${col} fashion scarf. A genuine wardrobe essential that works across every season — neck wrap in cooler months, beach cover-up in summer, head wrap for boho styling, or decorative bag tie year-round. Few accessories offer this level of real-world versatility at this quality level.
+
+Measuring ${size}, the generous dimensions support multiple styling applications well beyond a standard neck scarf. The ${col} colorway pairs naturally with neutral and patterned outfits alike, making it one of those rare accessories that genuinely elevates whatever you wear it with.
+
+KEY FEATURES
+GENEROUS SIZE — ${size} supports neck wrap, shoulder shawl, head wrap, beach sarong, and bag tie styling — all from one accessory.
+
+VIBRANT ${col.toUpperCase()} — Colorfast dyes maintain richness through repeated washing. The color you order is the color that lasts.
+
+SOFT, COMFORTABLE FABRIC — No scratching or irritation. A pleasant weight that feels luxurious without being heavy — comfortable whether worn against skin or layered over clothing.
+
+LIGHTWEIGHT AND PACKABLE — Folds or rolls into a compact form that fits in any handbag or travel bag.
+
+USA WAREHOUSE — Ships from the Ahsan Aslam USA facility.
+
+SPECIFICATIONS
+• SKU: ${sku} | Color: ${col} | Dimensions: ${size}
+• Material: Soft fabric blend | Warehouse: ${p.warehouse||'Ahsan Aslam — USA'}
+
+STYLING: Neck Wrap, Shoulder Shawl, Head Wrap, Beach Sarong, Bag Tie.
+CARE: Gentle machine wash, cold water. Do not tumble dry. Line dry or lay flat.`;
+  }
+
+  if(cat==="Accessories"&&(n.includes("RFID")||n.includes("WALLET"))){
+    return `SKU: ${sku} | RFID BLOCKING WALLET — PREMIUM SECURITY WALLET
+${'='.repeat(60)}
+
+PRODUCT OVERVIEW
+Protect your financial data with this premium RFID Blocking Wallet. In an era where contactless card skimming is a genuine and growing threat, RFID protection is no longer optional. This slim ${size} wallet combines advanced radio frequency shielding with practical everyday carry functionality — passive, always-on protection requiring no batteries, no settings, no behavioral change from you.
+
+The clean minimalist profile eliminates traditional bifold bulk while retaining all the card and cash capacity a modern wallet requires. Drop your cards in and they are automatically shielded from all unauthorized electronic scanning.
+
+KEY FEATURES
+RFID BLOCKING — Specialized lining blocks 13.56 MHz NFC/RFID signals used by all modern contactless payment cards, NFC-enabled IDs, and access passes.
+
+SLIM PROFILE — ${size} dimensions for front or back pocket carry. Designed for essentials: payment cards, ID, and cash without uncomfortable bulk.
+
+QUALITY CONSTRUCTION — Premium materials, reinforced stitching, precisely sized card slots.
+
+MULTIPLE COMPARTMENTS — Quick-access slots, secondary card compartments, cash section.
+
+USA WAREHOUSE — Ships from the Ahsan Aslam USA facility.
+
+SPECIFICATIONS
+• SKU: ${sku} | Type: RFID Blocking Wallet | Dimensions: ${size}
+• Blocks: 13.56 MHz NFC/RFID | Warehouse: ${p.warehouse||'Ahsan Aslam — USA'}
+
+IDEAL FOR: Frequent travelers, daily commuters, professionals with multiple access cards, and anyone who wants passive, always-on financial data protection.`;
+  }
+
+  if(n.includes("POCKET KNIFE")){
+    const col=n.includes("RED")?"Red":"Black";
+    return `SKU: ${sku} | POCKET KNIFE — ${col.toUpperCase()}
+${'='.repeat(60)}
+
+PRODUCT OVERVIEW
+A reliable, quality pocket knife built for real everyday carry. The ${name} delivers compact, capable performance in a ${size} pocketable form — the right balance between genuinely pocketable and genuinely useful. Built for people who value function and reliability, not just looks.
+
+The bold ${col} handle provides grip security and easy visual identification in a bag or kit. Sourced from the Ahsan Aslam USA Warehouse, inspected before dispatch.
+
+KEY FEATURES
+COMPACT ${size} FORM — Pocketable without discomfort, substantial enough for real cutting tasks.
+DURABLE CONSTRUCTION — Quality blade steel, secure locking mechanism, non-slip ${col} handle scales.
+BOLD ${col.toUpperCase()} HANDLE — Easy to locate in any kit or bag; distinctive confident appearance.
+RELIABLE BLADE ACTION — Smooth deployment, secure lock, consistent performance across all conditions.
+USA WAREHOUSE — Ships from the Ahsan Aslam USA facility.
+
+SPECIFICATIONS
+• SKU: ${sku} | Color: ${col} | Folded: ${size}
+• Locking mechanism: reliable lock-back/liner lock
+• Warehouse: ${p.warehouse||'Ahsan Aslam — USA'}
+
+SAFETY: Sharp cutting tool — handle responsibly. Keep away from children. Follow local knife carry laws.
+IDEAL FOR: EDC, camping, hiking, emergency preparedness, outdoor adventures, and practical gift giving.`;
+  }
+
+  // Branded/sports/misc patches — generate based on name keywords
+  let brand='', style='', colors='';
+
+  if(n.includes("TOMMY")){
+    brand="Tommy Hilfiger";
+    if(n.includes("SHIELD")) style="the iconic TH Shield crest with heraldic styling", colors="navy blue, red, and white";
+    else if(n.includes("DARK NAVY")) style="Tommy text logo in rich dark navy embroidery", colors="deep dark navy blue";
+    else if(n.includes("PLAIN")&&n.includes("SMALL")) style="the Tommy wordmark in small format", colors="classic navy and white";
+    else style="the classic Tommy Hilfiger logo design", colors="navy, red, and white";
+    return brandPatchDesc(sku,name,size,brand,style,colors,p.warehouse);
+  }
+  if(n.includes("NIKE")) return n.includes("WHITE")?brandPatchDesc(sku,name,size,"Nike","the iconic Nike Swoosh in white colorway","crisp white on dark backing",p.warehouse):brandPatchDesc(sku,name,size,"Nike","the iconic Nike Swoosh logo","black and white Swoosh design",p.warehouse);
+  if(n.includes("MONCLER")) return brandPatchDesc(sku,name,size,"Moncler","the iconic Moncler bird emblem logo",n.includes("BLACK")?"black with white contrast":"classic Moncler brand palette",p.warehouse);
+  if(n.includes("NORTH FACE")){const c=n.includes("WHITE")?"white on dark backing":n.includes("RED")?"red and white":n.includes("YELLOW")?"yellow and white":"black and white";return brandPatchDesc(sku,name,size,"The North Face","the iconic TNF half-dome logo with brand wordmark",c,p.warehouse);}
+  if(n.startsWith("CK")||n.includes("CK BLACK")) return brandPatchDesc(sku,name,size,"Calvin Klein","the iconic CK monogram logo","black and white minimalist palette",p.warehouse);
+  if(n.includes("CANADA GOOSE")) return brandPatchDesc(sku,name,size,"Canada Goose","the iconic Canada Goose circular disc logo",n.includes("BLACK")?"black and white":"blue and red",p.warehouse);
+  if(n.includes("BELSTAFF")) return brandPatchDesc(sku,name,size,"Belstaff","the Belstaff brand logo and crest design",n.includes("YELLOW")?"bold yellow":n.includes("SKIN")?"skin/beige tone":"gray and white",p.warehouse);
+  if(n.includes("LOUIS VUITTON")||sku.includes("LV")) return brandPatchDesc(sku,name,size,"Louis Vuitton",n.includes("HEART")?"the LV heart monogram":n.includes("CIRCLE")?"the LV circular monogram":"the iconic LV monogram design","classic LV tan, brown, and gold",p.warehouse);
+  if(n.includes("HARLEY")) return brandPatchDesc(sku,name,size,"Harley-Davidson",n.includes("OVAL")?"the Harley-Davidson oval logo":"the Harley-Davidson bar-and-shield eagle logo","orange, black, and white",p.warehouse);
+  if(n.includes("ROLLING STONES")) return brandPatchDesc(sku,name,size,"Rolling Stones","the iconic tongue-and-lips logo","red, white, and black",p.warehouse);
+  if(n.includes("RED BULL")) return brandPatchDesc(sku,name,size,"Red Bull","the Red Bull brand logo with charging bull motif","red, blue, and gold",p.warehouse);
+  if(n.includes("GUCCI")||sku.includes("IOG")||sku.includes("EPG")) return brandPatchDesc(sku,name,size,"Gucci","the iconic Gucci GG monogram design","classic Gucci tan and brown",p.warehouse);
+  if(n.includes("PING")) return brandPatchDesc(sku,name,size,"PING Golf","the PING Golf brand wordmark logo","black, white, and orange",p.warehouse);
+  if(n.includes("DICK")) return brandPatchDesc(sku,name,size,"DICK'S Sporting Goods","the DICK'S Sporting Goods brand logo","black and white",p.warehouse);
+  if(n.includes("MARLBORO")) return brandPatchDesc(sku,name,size,"Marlboro","the Marlboro chevron and wordmark","red, white, and gold",p.warehouse);
+  if(n.includes("ADIDAS")) return ironOnDesc(sku,name,size,"Adidas","the iconic Adidas trefoil logo",p.warehouse);
+  if(n.includes("UPS")&&n.includes("ORANGE")) return brandPatchDesc(sku,name,size,"UPS","the UPS brand shield logo in orange",n.includes("SMALL")?"small format":n.includes("MEDIUM")?"medium format":"large format",p.warehouse);
+  if(n.startsWith("YN ")) return brandPatchDesc(sku,name,size,"YN Brand","the YN brand logo",n.replace("YN ","").trim()+" colorway",p.warehouse);
+  if(n.includes("ALTOTUX")) return brandPatchDesc(sku,name,size,"Altotux","the Altotux brand emblem","classic brand colors",p.warehouse);
+  if(n.includes("CLOT")||n.includes("FIREARMS")) return miscPatchDesc(sku,name,size,"CLOT Firearms streetwear brand logo design","bold graphic streetwear identity","streetwear collectors",p.warehouse);
+
+  // USA / Patriotic
+  if(["USA","TEXAS","CUBA"].some(k=>n.includes(k))||["USA XS","USA S","USA M","USA L","USA XL"].some(k=>n===k)){
+    if(n.includes("CROWN")) return usaPatchDesc(sku,name,size,"USA Crown with Statue of Liberty crown motif","red, white, and blue",p.warehouse);
+    if(n.includes("WAVE")) return usaPatchDesc(sku,name,size,"USA wave-shaped flag design","red, white, and blue",p.warehouse);
+    if(n.includes("#1")) return usaPatchDesc(sku,name,size,"USA #1 flag and bold numeral design","red, white, and blue",p.warehouse);
+    if(n.includes("TEXAS STAR")) return usaPatchDesc(sku,name,size,"Texas Lone Star design","red, white, and blue with gold",p.warehouse);
+    if(n.includes("TEXAS EMB")) return usaPatchDesc(sku,name,size,"Texas state emblem design","red, white, and blue",p.warehouse);
+    if(n.includes("CUBA")) return usaPatchDesc(sku,name,size,"Cuban national flag design","blue, white, and red",p.warehouse);
+    return usaPatchDesc(sku,name,size,`USA flag embroidery — ${size} format`,"red, white, and blue",p.warehouse);
+  }
+
+  // Olympics
+  if(n.includes("OLYMPIC")){
+    const c=n.includes("RED")?"red":n.includes("BLUE")?"blue":n.includes("BLACK")?"black":"white";
+    return sportsPatchDesc(sku,name,size,`Olympic rings with ${c} border design`,"Olympic Games",`${c} border with five-ring motif`,p.warehouse);
+  }
+
+  // Sports teams
+  if(n.includes("NFL")&&(n.includes("(S)")||n.includes("(L)")||n.includes("BLACK"))) return sportsPatchDesc(sku,name,size,"NFL shield logo","NFL American Football","navy, red, and white",p.warehouse);
+  if(n.includes("49ERS")||n.includes("SF NFL")) return sportsPatchDesc(sku,name,size,"San Francisco 49ers design","NFL American Football","49ers gold and red",p.warehouse);
+  if(n.includes("SF OVAL")) return sportsPatchDesc(sku,name,size,"San Francisco oval team emblem","NFL American Football","49ers gold and red",p.warehouse);
+  if(n.includes("STEELER")) return sportsPatchDesc(sku,name,size,"Pittsburgh Steelers steelmark logo","NFL American Football","black and gold",p.warehouse);
+  if(n.includes("DETROIT TIGER")) return sportsPatchDesc(sku,name,size,"Detroit Tigers Old English D logo","MLB Baseball","navy and orange",p.warehouse);
+  if(n.includes("RAVEN")) return sportsPatchDesc(sku,name,size,"Baltimore Ravens raven shield logo","NFL American Football","purple, black, and gold",p.warehouse);
+  if(n.includes("THUNDER")) return sportsPatchDesc(sku,name,size,"Oklahoma City Thunder OKC logo","NBA Basketball","blue, orange, and yellow",p.warehouse);
+  if(n.includes("METS")) return sportsPatchDesc(sku,name,size,"New York Mets NY script logo","MLB Baseball","blue and orange",p.warehouse);
+  if(n.includes("VIKING")||n.includes("MINNESOTA")) return sportsPatchDesc(sku,name,size,"Minnesota Vikings horned helmet logo","NFL American Football","purple and gold",p.warehouse);
+  if(n.includes("CHAMPIONS")&&n.includes("LA")) return sportsPatchDesc(sku,name,size,"LA Champions commemorative design","Sports Commemorative","gold and purple",p.warehouse);
+  if(n.includes("HOCKEY UTAH")) return sportsPatchDesc(sku,name,size,"Utah Hockey Club team logo","NHL Ice Hockey","Utah HC blue and white",p.warehouse);
+  if(n.includes("WASHINGTON DC")) return sportsPatchDesc(sku,name,size,"Washington DC team emblem","Sports / City Pride","burgundy, gold, and white",p.warehouse);
+  if(n.includes("LUFC")) return sportsPatchDesc(sku,name,size,"Leeds United FC shield and crest","Football / Soccer","white and blue",p.warehouse);
+  if(n.includes("RED INDIAN")||n.includes("RED SKIN")) return sportsPatchDesc(sku,name,size,"Washington NFL heritage design","NFL Heritage","burgundy, gold, and white",p.warehouse);
+  if(n.includes("ARIZONA STATE")) return sportsPatchDesc(sku,name,size,"Arizona State Sun Devils pitchfork logo","NCAA College Sports","maroon and gold",p.warehouse);
+  if(n.includes("PHILLY CHAMPS")) return sportsPatchDesc(sku,name,size,"Philadelphia Eagles Super Bowl Champions design","NFL Championship","green, black, and silver",p.warehouse);
+  if(n.includes("FOOTBALL PLAYOFF")) return sportsPatchDesc(sku,name,size,"NFL Playoffs 2025 commemorative design","NFL Commemorative","classic NFL shield colors",p.warehouse);
+  if(n.includes("FINALS PACERS")) return sportsPatchDesc(sku,name,size,"Indiana Pacers NBA Finals patch","NBA Championship","blue and gold",p.warehouse);
+  if(n.includes("SAN DIEGO")) return sportsPatchDesc(sku,name,size,"San Diego sports team pride emblem","Sports / City Pride","navy and gold",p.warehouse);
+  if(n.includes("CHICAGO")) return sportsPatchDesc(sku,name,size,"Chicago team emblem and city wordmark","Sports / City Pride","red and white",p.warehouse);
+  if(n.includes("SBG EAGLE")) return miscPatchDesc(sku,name,size,"bold American eagle emblem — SBG spread-wings design","dramatic eagle with detailed feather work","patriotic buyers, military community",p.warehouse);
+  if(n.includes("SUPER BOWL LIX")||n.includes("LIX CHAMP")) return sportsPatchDesc(sku,name,size,"Super Bowl LIX Championship commemorative design","NFL Championship","Eagles green, gold, and silver",p.warehouse);
+  if(n.includes("FLY GREEN")) return sportsPatchDesc(sku,name,size,"Philadelphia Eagles 'Fly Eagles Fly' fan design","NFL American Football","Eagles midnight green and white",p.warehouse);
+  if(n.includes("EAGLES FIRST")) return sportsPatchDesc(sku,name,size,"Philadelphia Eagles first Super Bowl win commemorative","NFL Championship",n.includes("BLUE")?"green and blue":"green and silver",p.warehouse);
+  if(n.includes("LIX CHAMP STICKER")) return sportsPatchDesc(sku,name,size,"Super Bowl LIX Champions sticker-patch design","NFL Championship","championship gold and Eagles green",p.warehouse);
+  if(n.includes("POLICE BADGE")) return miscPatchDesc(sku,name,size,"large-format police badge emblem","professional law enforcement badge design","law enforcement community, supporters",p.warehouse);
+  if(n.includes("POLICE SHIELD")) return miscPatchDesc(sku,name,size,"large-format police shield emblem","professional shield badge design","law enforcement community, supporters",p.warehouse);
+  if(n.includes("ADMIT NOTHING")) return miscPatchDesc(sku,name,size,"bold 'Admit Nothing' attitude statement","attitude culture text patch","biker culture, attitude fashion",p.warehouse);
+  if(n.includes("BE PREPARED")) return miscPatchDesc(sku,name,size,"Boy Scouts 'Be Prepared' motto design","classic outdoor readiness motto patch","scouts, outdoor enthusiasts",p.warehouse);
+  if(n.includes("50 EST")) return miscPatchDesc(sku,name,size,"50th anniversary EST commemorative emblem","vintage anniversary design","collectors, anniversary merchandise",p.warehouse);
+  if(n.includes("TIGER")&&!n.includes("DETROIT")) return miscPatchDesc(sku,name,size,"fierce tiger face wildlife design","detailed tiger face with vivid orange and black","wildlife fans, biker culture",p.warehouse);
+  if(n.includes("BLACK LEAVES")) return miscPatchDesc(sku,name,size,"decorative black botanical leaf design","elegant black leaf motif for fashion customization","fashion, nature lovers, boho style",p.warehouse);
+  if(n.includes("GREEN LEAVES")) return miscPatchDesc(sku,name,size,"decorative green botanical leaf design","vibrant green leaf motif","fashion, nature lovers, boho style",p.warehouse);
+  if(n.includes("MICKEY MOUSE")) return charPatchDesc(sku,name,size,"Mickey Mouse","iconic Mickey Mouse full-body design","children, families, Disney fans",p.warehouse);
+  if(n.includes("SANTA")) return charPatchDesc(sku,name,size,"Santa Claus","jolly Santa Claus waving — festive design","Christmas enthusiasts, families",p.warehouse);
+  if(n.includes("CINDERELLA")) return charPatchDesc(sku,name,size,"Cinderella","elegant Cinderella character design","Disney fans, children, collectors",p.warehouse);
+  if(n.includes("PUPPY DOG")) return charPatchDesc(sku,name,size,"Puppy Dog (Sequin)","adorable puppy with sparkling sequin embellishments","children, pet lovers",p.warehouse);
+  if(n.includes("CANADA FLAG")) return usaPatchDesc(sku,name,size,"Canadian Maple Leaf flag design","red and white with maple leaf",p.warehouse);
+
+  // Generic fallback
+  return miscPatchDesc(sku,name,size,`${name} design`,`${name} embroidered design with professional thread work`,"collectors, fashion enthusiasts",p.warehouse);
+}
+
+function brandPatchDesc(sku,name,size,brand,style,colors,wh){
+  return `SKU: ${sku} | ${name.toUpperCase()} — ${brand.toUpperCase()} EMBROIDERED PATCH
+${'='.repeat(60)}
+
+PRODUCT OVERVIEW
+Elevate your wardrobe with this premium ${brand} embroidered patch. Whether personalizing a denim jacket, refreshing a backpack, or adding a designer accent to a cap, this patch delivers bold visual impact with professional embroidery quality. Measuring ${size}, it features ${style} in ${colors} — capturing the iconic ${brand} aesthetic with impressive accuracy.
+
+KEY FEATURES
+PREMIUM EMBROIDERY — High-density polyester threads, vibrant fill stitching, accurate color matching for the ${brand} aesthetic.
+DUAL BACKING — Iron-on adhesive for quick application; sew-on compatible base for permanent attachment.
+MERROWED BORDER — Overlock-stitched edge prevents fraying, maintains shape, delivers a professional finish.
+COLORFAST — Fade-resistant threads maintain ${colors} vibrancy through washing and daily wear.
+USA WAREHOUSE — Ships from ${wh||'Ahsan Aslam — USA'}, inspected before dispatch.
+
+SPECIFICATIONS
+• SKU: ${sku} | Brand: ${brand} | Design: ${style}
+• Size: ${size} | Colors: ${colors}
+• Backing: Dual iron-on + sew-on | Border: Merrowed
+• Warehouse: ${wh||'Ahsan Aslam — USA'}
+
+APPLICATION: Iron-On — preheat to cotton setting, press 30–45 sec under damp cloth, cool fully. Sew-On — stitch around full perimeter.
+CARE: Hand wash or gentle cycle cold. No direct iron on patch. No bleach. Air dry.`;
+}
+
+function ironOnDesc(sku,name,size,brand,design,wh){
+  return `SKU: ${sku} | ${name.toUpperCase()} — ${brand.toUpperCase()} IRON-ON PATCH
+${'='.repeat(60)}
+
+PRODUCT OVERVIEW
+Transform any garment in minutes with this premium ${brand} iron-on embroidered patch. No sewing needed — place, press, and done. Features ${design} at ${size} for maximum visual impact.
+
+KEY FEATURES
+IRON-ON APPLICATION — Full-coverage heat adhesive backing. Apply with household iron in under 2 minutes.
+PREMIUM EMBROIDERY — High-density fill stitching for accurate ${brand} design reproduction.
+LARGE FORMAT ${size} — Sized for maximum statement impact on jacket backs, bag panels, and more.
+COLORFAST — Fade-resistant threads through washing and wear.
+USA WAREHOUSE — Ships from ${wh||'Ahsan Aslam — USA'}.
+
+SPECIFICATIONS: SKU: ${sku} | Brand: ${brand} | Design: ${design} | Size: ${size}
+APPLICATION: Max heat iron, no steam. Damp pressing cloth. Firm pressure 30–45 sec. Cool 2 min. Press from inside for stronger bond.`;
+}
+
+function usaPatchDesc(sku,name,size,design,colors,wh){
+  return `SKU: ${sku} | ${name.toUpperCase()} — PATRIOTIC EMBROIDERED PATCH
+${'='.repeat(60)}
+
+PRODUCT OVERVIEW
+Show your pride with this bold ${name} patriotic embroidered patch. Measuring ${size}, it features ${design} in ${colors} — crafted for veterans, bikers, outdoor enthusiasts, collectors, and anyone who wants to wear their patriotism clearly and confidently.
+
+KEY FEATURES
+ACCURATE DESIGN — ${design} executed in high-density embroidery with precise ${colors} color matching.
+DUAL BACKING — Iron-on adhesive + sew-on compatible. Works on jackets, caps, bags, gear, and more.
+MERROWED BORDER — Fray-resistant overlock edge maintains crisp professional finish.
+COLORFAST ${colors.toUpperCase()} — Fade-resistant threads through washing, UV, and daily wear.
+USA WAREHOUSE — Ships from ${wh||'Ahsan Aslam — USA'}.
+
+SPECIFICATIONS: SKU: ${sku} | Design: ${design} | Size: ${size} | Colors: ${colors}
+PERFECT FOR: Veterans, bikers, outdoor adventurers, collectors, patriotic apparel projects.`;
+}
+
+function sportsPatchDesc(sku,name,size,teamDesc,sport,colors,wh){
+  return `SKU: ${sku} | ${name.toUpperCase()} — SPORTS TEAM EMBROIDERED PATCH
+${'='.repeat(60)}
+
+PRODUCT OVERVIEW
+Rep your team with this premium ${name} embroidered patch. Measuring ${size}, it features ${teamDesc} in ${colors} — crafted for dedicated fans who want quality as bold as their loyalty. Works on game-day jackets, sports bags, caps, and any fabric item where team colors need to be displayed proudly.
+
+KEY FEATURES
+BOLD TEAM DESIGN — ${teamDesc} in ${colors}, executed with tight high-density embroidery stitch coverage.
+DUAL BACKING — Iron-on adhesive + sew-on compatible for lasting attachment on high-use fan gear.
+MERROWED BORDER — Clean edge prevents fraying and maintains professional look through regular use.
+COLORFAST — Team colors stay vibrant through washing and daily wear, season after season.
+USA WAREHOUSE — Ships from ${wh||'Ahsan Aslam — USA'}.
+
+SPECIFICATIONS: SKU: ${sku} | Sport: ${sport} | Design: ${teamDesc} | Size: ${size} | Colors: ${colors}
+PERFECT FOR: Game-day outfits, fan jackets, sports bags, caps, collector displays, and gifts for fellow supporters.`;
+}
+
+function miscPatchDesc(sku,name,size,theme,design,audience,wh){
+  return `SKU: ${sku} | ${name.toUpperCase()} — EMBROIDERED PATCH
+${'='.repeat(60)}
+
+PRODUCT OVERVIEW
+Make your mark with this boldly designed ${name} embroidered patch. Featuring ${theme}, this patch is crafted for ${audience} — and anyone who believes what you wear should say something worth reading. Measuring ${size}, the ${design} is executed in professional-grade embroidery ready to apply via iron-on or sew-on.
+
+KEY FEATURES
+BOLD CLEAR DESIGN — ${design} in high-density embroidery with tight fill stitching and accurate colors.
+DUAL BACKING — Iron-on adhesive + sew-on compatible. Apply to jackets, bags, caps, and more.
+MERROWED BORDER — Fray-resistant edge with professional clean finish.
+COLORFAST — Fade-resistant threads through regular washing and wear.
+USA WAREHOUSE — Ships from ${wh||'Ahsan Aslam — USA'}.
+
+SPECIFICATIONS: SKU: ${sku} | Theme: ${theme} | Size: ${size}
+IDEAL FOR: ${audience}, collectors, DIY fashion enthusiasts, and apparel customizers.`;
+}
+
+function charPatchDesc(sku,name,size,char,design,audience,wh){
+  return `SKU: ${sku} | ${name.toUpperCase()} — CHARACTER EMBROIDERED PATCH
+${'='.repeat(60)}
+
+PRODUCT OVERVIEW
+Bring the magic of ${char} to any garment with this premium character patch. Featuring ${design} at ${size}, it delivers the character's iconic visual identity in high-quality embroidery — perfect for ${audience}. Apply in minutes via iron-on or sew-on backing.
+
+KEY FEATURES
+DETAILED ${char.toUpperCase()} EMBROIDERY — ${design}, accurate colors, merrowed border, professional finish.
+DUAL BACKING — Iron-on for quick application; sew-on for maximum durability on children's clothing.
+COLORFAST — Vibrant colors through repeated washing.
+USA WAREHOUSE — Ships from ${wh||'Ahsan Aslam — USA'}.
+
+SPECIFICATIONS: SKU: ${sku} | Character: ${char} | Design: ${design} | Size: ${size}
+PERFECT FOR: ${audience}, collector displays, cosplay, handmade gifts.`;
+}
+
+function getImageInstructions(p){
+  const sku=p.sku_code||''; const name=(p.name||'').trim(); const cat=p.category||''; const n=name.toUpperCase();
+  const dogKeys=["RETIRED","I AM DEAF","BLIND DOG","STAFF X LAB","IN TRAINING","DO NOT FEED","DO NOT TOUCH","I NEED SPACE","SEIZURE SUPPORT","XL BULLY","AMERICAN BULL DOG","EMOTIONAL SUPPORT"];
+  if(cat==="Dog Vest Patches"||dogKeys.some(k=>n.includes(k))){
+    const sc=["S","M","L"].includes(p.size)?p.size:"M";
+    return `IMAGE INSTRUCTIONS — ${name.toUpperCase()} Size ${sc} | SKU: ${sku}
+${'='.repeat(55)}
+IMAGE 1 — MAIN (MANDATORY): White background. Patch centered 80–90% frame. Text perfectly horizontal and fully legible at thumbnail size. Top-down flat lay. Min 1600x1600px.
+IMAGE 2 — TEXT LEGIBILITY: Tight crop on patch text. Maximum sharpness. The message must be immediately readable at small sizes.
+IMAGE 3 — HOOK-AND-LOOP BACKING: Show velcro-compatible backing on white background. Confirms attachment method.
+IMAGE 4 — SIZE REFERENCE: Patch next to ruler. Consider S/M/L side by side if all sizes available.
+IMAGE 5 — IN-USE LIFESTYLE (HIGH PRIORITY): Patch on real dog vest or harness loop panel. Real dog preferred. Text clearly readable. Outdoor or neutral indoor setting.
+IMAGE 6 — MULTI-SIZE COMPARISON: S, M, L patches together on white background with size labels.
+NOTE: Text sharpness and in-use lifestyle shot are the two highest conversion drivers for dog vest patches.`;
+  }
+  if(cat==="Smocked Bags"){
+    const col=name.replace("Smocked Bag ","").trim();
+    return `IMAGE INSTRUCTIONS — SMOCKED BAG ${col.toUpperCase()} | SKU: ${sku}
+${'='.repeat(55)}
+IMAGE 1 — MAIN (MANDATORY): White background. Bag upright, fully shaped, frame 80–90%. Color ${col} must appear true.
+IMAGE 2 — SMOCKING TEXTURE CLOSE-UP (HERO): Macro of smocking panel. Low-angle side lighting for texture depth. Most important differentiating shot.
+IMAGE 3 — INTERIOR/CAPACITY: Bag opened showing interior. Place sample items inside for scale.
+IMAGE 4 — DIMENSIONS REFERENCE: Next to tape measure. Include folded and expanded views.
+IMAGE 5 — LIFESTYLE: Model or mannequin carrying the bag in a market, beach, or casual outdoor setting.
+IMAGE 6 — COLOR FAMILY (OPTIONAL): All color variants together for variant display.`;
+  }
+  if(cat==="Scarves"){
+    const col=name.replace("Scarf ","").trim();
+    return `IMAGE INSTRUCTIONS — SCARF ${col.toUpperCase()} | SKU: ${sku}
+${'='.repeat(55)}
+IMAGE 1 — MAIN (MANDATORY): White background. Scarf loosely arranged showing full color. Color ${col} must appear true.
+IMAGE 2 — FABRIC TEXTURE CLOSE-UP: Close-up of weave/texture with slight side lighting.
+IMAGE 3 — FULL LENGTH FLAT LAY: Scarf fully extended showing complete dimensions.
+IMAGE 4 — DRAPED ARRANGEMENT: Loosely draped showing how fabric falls and moves.
+IMAGE 5 — LIFESTYLE (ESSENTIAL): Model in neck wrap, shoulder drape, or head wrap style. Color should complement outfit.`;
+  }
+  if(cat==="Accessories"){
+    const isKnife=n.includes("KNIFE");
+    return `IMAGE INSTRUCTIONS — ${name.toUpperCase()} | SKU: ${sku}
+${'='.repeat(55)}
+IMAGE 1 — MAIN (MANDATORY): White background. Product centered, primary face showing. Min 1600x1600px.
+IMAGE 2 — MULTI-ANGLE SET: Front, side profile, and rear views (3 shots or composite).
+IMAGE 3 — DETAIL CLOSE-UP: ${isKnife?"Blade edge, locking mechanism, handle texture and color":"Card slots interior, stitching quality, material texture"}.
+IMAGE 4 — SCALE REFERENCE: Next to credit card or ruler. Critical for accurate size perception.
+IMAGE 5 — IN-USE LIFESTYLE: ${isKnife?"Knife held in hand, blade deployed for display":"Wallet in hand, cards visible in slots or placed in pocket"}.
+IMAGE 6 — PACKAGING/GIFT SHOT: Any included box, case, or packaging — relevant for gift purchases.
+NOTE: ${isKnife?"Use diffused lighting to avoid blade glare.":"Show RFID blocking label/badge if present — key purchase driver."}`;
+  }
+  // Default: embroidered patch
+  const isLarge=name.toLowerCase().includes("large")||name.toLowerCase().includes("strip");
+  return `IMAGE INSTRUCTIONS — ${name.toUpperCase()} | SKU: ${sku}
+${'='.repeat(55)}
+IMAGE 1 — MAIN (MANDATORY): Pure white background. Patch centered, 80–90% frame. Top-down flat lay. Even diffused light — no shadows on patch face. Min 1600x1600px. No watermarks.
+IMAGE 2 — DESIGN DETAIL CLOSE-UP: Ultra-close crop on embroidery. Show thread density, color accuracy, merrowed border. Builds buyer confidence in quality.
+IMAGE 3 — BACKING DETAIL: Flip patch — show adhesive/sew-on surface. Include any SKU label present.
+IMAGE 4 — SIZE REFERENCE: Patch next to ruler or credit card showing ${p.size||'dimensions'}.
+IMAGE 5 — LIFESTYLE IN-USE (HIGH IMPACT): Patch applied to ${isLarge?"jacket back or bag front panel":"denim jacket chest, sleeve, or bag"}. Clean, pressed garment. Flat lay or headless mannequin. Natural or studio lighting.
+IMAGE 6 — ANGLE/TEXTURE SHOT: 30-degree angle to show 3D embossed embroidery texture.
+OPTIONAL: Iron-on step-by-step (3 shots: position / press / result). Family/variant comparison shot.
+NOTES: Use lightbox for consistent white. Macro lens for stitch details. Avoid auto-sharpening in post.`;
+}
+
+// ── GENERATE & DOWNLOAD ──
+function previewOne(skuCode){
+  const p=ALL_SKUS.find(x=>x.sku_code===skuCode);
+  if(!p) return;
+  CURRENT_SKU=skuCode;
+  const desc=getDescription(p);
+  const imgs=getImageInstructions(p);
+  GENERATED[skuCode]={desc,imgs};
+  document.getElementById('previewTitle').textContent=`${p.sku_code} — ${p.name}`;
+  document.getElementById('descContent').textContent=desc;
+  document.getElementById('imgContent').textContent=imgs;
+  document.getElementById('preview').style.display='block';
+  document.getElementById('preview').scrollIntoView({behavior:'smooth'});
+  switchTab('desc');
+  renderTable();
+}
+
+function switchTab(tab){
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',['desc','img'][i]===tab));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+
+function downloadTxt(content, filename){
+  const a=document.createElement('a');
+  a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(content);
+  a.download=filename; a.click();
+}
+
+function downloadCurrent(type){
+  if(!CURRENT_SKU||!GENERATED[CURRENT_SKU]) return alert('Generate or preview a SKU first');
+  const g=GENERATED[CURRENT_SKU];
+  if(type==='desc') downloadTxt(g.desc,`${CURRENT_SKU}_Description.txt`);
+  else downloadTxt(g.imgs,`${CURRENT_SKU}_Image_Instructions.txt`);
+}
+
+async function downloadBothCurrent(){
+  if(!CURRENT_SKU||!GENERATED[CURRENT_SKU]) return alert('Generate or preview a SKU first');
+  const g=GENERATED[CURRENT_SKU];
+  const p=ALL_SKUS.find(x=>x.sku_code===CURRENT_SKU);
+  const folderName=`${p.sku_code} - ${p.name.replace(/[<>:"/\\|?*]/g,'')}`;
+  const zip=new JSZip();
+  const folder=zip.folder(folderName);
+  folder.file("Description.txt",g.desc);
+  folder.file("Image_Placeholder_Instructions.txt",g.imgs);
+  const blob=await zip.generateAsync({type:"blob"});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`${CURRENT_SKU}_ReadyToList.zip`; a.click();
+}
+
+async function generateSelected(){
+  const checked=[...document.querySelectorAll('.sku-check:checked')].map(c=>c.value);
+  if(!checked.length) return alert('Select at least one SKU');
+  await runGeneration(checked);
+}
+
+async function generateAll(){
+  const skus=FILTERED.map(p=>p.sku_code);
+  if(!skus.length) return alert('No SKUs in current filter');
+  if(!confirm(`Generate and download ZIP for ${skus.length} SKUs?`)) return;
+  await runGeneration(skus);
+}
+
+async function runGeneration(skuCodes){
+  const btn=document.getElementById('genBtn');
+  const aBtn=document.getElementById('genAllBtn');
+  btn.disabled=aBtn.disabled=true;
+  document.getElementById('genLog').innerHTML='';
+  document.getElementById('genProgress').style.width='0%';
+  log(`Starting generation for ${skuCodes.length} SKUs...`);
+
+  const zip=new JSZip();
+  let done=0;
+  for(const skuCode of skuCodes){
+    const p=ALL_SKUS.find(x=>x.sku_code===skuCode);
+    if(!p){log(`SKU not found: ${skuCode}`,'log-warn');continue;}
+    const desc=getDescription(p);
+    const imgs=getImageInstructions(p);
+    GENERATED[skuCode]={desc,imgs};
+    const folderName=`${p.sku_code} - ${p.name.replace(/[<>:"/\\|?*]/g,'')}`;
+    const folder=zip.folder('SkyCart_Ready_to_List/'+folderName);
+    folder.file("Description.txt",desc);
+    folder.file("Image_Placeholder_Instructions.txt",imgs);
+    done++;
+    const pct=Math.round(done/skuCodes.length*100);
+    document.getElementById('genProgress').style.width=pct+'%';
+    document.getElementById('genStatus').textContent=`Generating ${done}/${skuCodes.length}...`;
+    if(done%10===0) log(`${done}/${skuCodes.length} complete...`,'log-ok');
+    await new Promise(r=>setTimeout(r,0));
+  }
+
+  log('Building ZIP archive...','log-info');
+  const blob=await zip.generateAsync({type:"blob"});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`SkyCart_Ready_to_List_${skuCodes.length}SKUs.zip`; a.click();
+  log(`✓ Done! ZIP downloaded with ${done} SKUs.`,'log-ok');
+  document.getElementById('genStatus').textContent=`✓ ${done} SKUs generated and downloaded`;
+  document.getElementById('genProgress').style.width='100%';
+  renderTable();
+  btn.disabled=aBtn.disabled=false;
+}
+
+// Auto-load on page open
+window.addEventListener('load',()=>{ loadSKUs(); });
+</script>
+</body>
+</html>
