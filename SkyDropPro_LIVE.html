@@ -14064,6 +14064,39 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
 
       /* image preview area */
       /* @__PURE__ */ import_react.default.createElement("div", null,
+        /* @__PURE__ */ import_react.default.createElement("div", { style:{background:"#0f172a",borderRadius:12,border:"1px solid #334155",padding:"14px 18px",display:"flex",flexWrap:"wrap",gap:12} },
+        /* @__PURE__ */ import_react.default.createElement("div", { style:{flex:"1 1 120px"} },
+          /* @__PURE__ */ import_react.default.createElement("div", { style:{fontSize:10,color:"#64748b",textTransform:"uppercase",fontWeight:700} }, "Cost Price"),
+          /* @__PURE__ */ import_react.default.createElement("div", { style:{fontSize:16,fontWeight:800,color:"#f1f5f9",marginTop:2} }, "PKR ", adminViewSku.cost_price || "—")
+        ),
+        /* @__PURE__ */ import_react.default.createElement("div", { style:{flex:"1 1 120px"} },
+          /* @__PURE__ */ import_react.default.createElement("div", { style:{fontSize:10,color:"#64748b",textTransform:"uppercase",fontWeight:700} }, "Retail Price"),
+          /* @__PURE__ */ import_react.default.createElement("div", { style:{fontSize:16,fontWeight:800,color:"#10b981",marginTop:2} }, "PKR ", adminViewSku.retail_price || "—")
+        ),
+        /* @__PURE__ */ import_react.default.createElement("div", { style:{flex:"1 1 120px"} },
+          /* @__PURE__ */ import_react.default.createElement("div", { style:{fontSize:10,color:"#64748b",textTransform:"uppercase",fontWeight:700} }, "WH Fee"),
+          /* @__PURE__ */ import_react.default.createElement("div", { style:{fontSize:16,fontWeight:800,color:"#f59e0b",marginTop:2} }, "PKR ", adminViewSku.wh_fee || "—")
+        ),
+        /* @__PURE__ */ import_react.default.createElement("div", { style:{flex:"1 1 120px"} },
+          /* @__PURE__ */ import_react.default.createElement("div", { style:{fontSize:10,color:"#64748b",textTransform:"uppercase",fontWeight:700} }, "Stock"),
+          /* @__PURE__ */ import_react.default.createElement("div", { style:{fontSize:16,fontWeight:800,color: adminViewSku.stock < 10 ? "#ef4444" : "#22d3ee",marginTop:2} }, adminViewSku.stock || 0, " units")
+        ),
+        /* @__PURE__ */ import_react.default.createElement("div", { style:{flex:"1 1 120px"} },
+          /* @__PURE__ */ import_react.default.createElement("div", { style:{fontSize:10,color:"#64748b",textTransform:"uppercase",fontWeight:700} }, "Profit/Unit"),
+          /* @__PURE__ */ import_react.default.createElement("div", { style:{fontSize:16,fontWeight:800,color:"#a78bfa",marginTop:2} }, "PKR ", (Number(adminViewSku.retail_price||0)-Number(adminViewSku.cost_price||0)-Number(adminViewSku.wh_fee||0)) || "—")
+        ),
+        adminViewSku.supplier_name && /* @__PURE__ */ import_react.default.createElement("div", { style:{flex:"1 1 160px"} },
+          /* @__PURE__ */ import_react.default.createElement("div", { style:{fontSize:10,color:"#64748b",textTransform:"uppercase",fontWeight:700} }, "Supplier"),
+          /* @__PURE__ */ import_react.default.createElement("div", { style:{fontSize:13,fontWeight:600,color:"#f1f5f9",marginTop:2} }, adminViewSku.supplier_name)
+        )
+      ),
+      adminViewSku.variations && adminViewSku.variations.length > 0 && /* @__PURE__ */ import_react.default.createElement("div", null,
+        /* @__PURE__ */ import_react.default.createElement("label", { style:{fontSize:11,fontWeight:700,color:"#38bdf8",textTransform:"uppercase",letterSpacing:0.8,display:"block",marginBottom:8} }, "🎨 Variations"),
+        /* @__PURE__ */ import_react.default.createElement("div", { style:{display:"flex",flexWrap:"wrap",gap:6} },
+          adminViewSku.variations.map(function(v,i){ return /* @__PURE__ */ import_react.default.createElement("span", { key:i, style:{background:"#1e293b",border:"1px solid #475569",borderRadius:20,padding:"3px 10px",fontSize:12,color:"#e2e8f0"} }, v.label || v); })
+        )
+      ),
+      /* @__PURE__ */ import_react.default.createElement("div", null,
         /* @__PURE__ */ import_react.default.createElement("label", { style:{fontSize:11,fontWeight:700,color:"#38bdf8",textTransform:"uppercase",letterSpacing:0.8,display:"block",marginBottom:8} }, "📷 Product Image URL (for eBay listings)"),
         /* @__PURE__ */ import_react.default.createElement("input", {
           value: editImg,
@@ -14242,7 +14275,7 @@ showCsv && /* @__PURE__ */ import_react.default.createElement("div", { style: { 
           /* @__PURE__ */ import_react.default.createElement("button", {
             style: { background:"rgba(14,165,233,.15)", color:"#38bdf8", border:"1px solid #0ea5e9", borderRadius:6, padding:"4px 10px", fontSize:11, fontWeight:700, cursor:"pointer" },
             onClick: () => {
-              var d = parseDesc(s.description || "");
+              var d = parseDesc(s.description || "", s.sku_code);
               setAdminViewSku(s);
               setEditDesc(d.all.join(" | "));
               setEditImg(d.image || "");
