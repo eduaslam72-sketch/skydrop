@@ -13763,6 +13763,42 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
     const [editDesc, setEditDesc] = (0, import_react.useState)("");
     const [editImg, setEditImg] = (0, import_react.useState)("");
     const [savingEdit, setSavingEdit] = (0, import_react.useState)(false);
+    const [imgTab, setImgTab] = (0, import_react.useState)("all");
+    const [uploadingId, setUploadingId] = (0, import_react.useState)(null);
+    async function handleQuickUpload(s, file) {
+      if (!file) return;
+      setUploadingId(s.id);
+      try {
+        await new Promise(function(resolve, reject) {
+          var reader = new FileReader();
+          reader.onload = function(ev) {
+            var img = new Image();
+            img.onload = async function() {
+              try {
+                var canvas = document.createElement("canvas");
+                var MAX = 300; var w = img.width; var h = img.height;
+                if (w > MAX || h > MAX) { if (w > h) { h = Math.round(h*MAX/w); w=MAX; } else { w=Math.round(w*MAX/h); h=MAX; } }
+                canvas.width=w; canvas.height=h;
+                canvas.getContext("2d").drawImage(img,0,0,w,h);
+                var dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+                var d = parseDesc(s.description || "", s.sku_code);
+                var newDesc = d.all.join(" | ") + " | Image: " + dataUrl;
+                await sbFetch("/rest/v1/skus?id=eq."+s.id, {method:"PATCH", body:JSON.stringify({description:newDesc})});
+                setSkus(function(prev){ return prev.map(function(x){ return x.id===s.id ? Object.assign({},x,{description:newDesc}) : x; }); });
+                toast("✅ Image saved for "+s.name, "success");
+                setImgTab("photo");
+                resolve();
+              } catch(e2) { reject(e2); }
+            };
+            img.onerror = reject;
+            img.src = ev.target.result;
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      } catch(e2) { toast("Upload failed: "+e2.message, "error"); }
+      setUploadingId(null);
+    }
     const [selectedIds, setSelectedIds] = (0, import_react.useState)(new Set());
     function toggleSelect(id) {
       setSelectedIds(prev => {
@@ -14044,6 +14080,9 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
     }
     const margin = (f2) => (f2.retail_price || 0) + (f2.wh_fee || 0) - (f2.cost_price || 0);
     const displaySkus = region ? skus.filter((s) => (s.warehouse || "").toUpperCase().includes(region.toUpperCase())) : skus;
+    const photoCount = displaySkus.filter(function(s){ return !!parseDesc(s.description, s.sku_code).image; }).length;
+    const noPhotoCount = displaySkus.length - photoCount;
+    const tabSkus = imgTab === "photo" ? displaySkus.filter(function(s){ return !!parseDesc(s.description, s.sku_code).image; }) : imgTab === "nophoto" ? displaySkus.filter(function(s){ return !parseDesc(s.description, s.sku_code).image; }) : displaySkus;
     const regionFlag = region === "USA" ? "\u{1F1FA}\u{1F1F8}" : region === "UK" ? "\u{1F1EC}\u{1F1E7}" : "\u{1F30D}";
     const regionColor = region === "USA" ? "#3B82F6" : region === "UK" ? "#EF4444" : "#38bdf8";
     return /* @__PURE__ */ import_react.default.createElement("div", null,
@@ -14256,14 +14295,20 @@ showCsv && /* @__PURE__ */ import_react.default.createElement("div", { style: { 
         ),
         /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-primary", onClick: () => { setF(blankSku); setShowAdd(true); } }, "+ Add SKU")
       )
-    ), ld ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "Loading...") : /* @__PURE__ */ import_react.default.createElement("div", { className: "card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "table-wrap" }, /* @__PURE__ */ import_react.default.createElement("table", null, /* @__PURE__ */ import_react.default.createElement("thead", null, /* @__PURE__ */ import_react.default.createElement("tr", null, /* @__PURE__ */ import_react.default.createElement("th", { style: { width: 36, textAlign: "center" } },
+    ), ld ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "Loading...") : /* @__PURE__ */ import_react.default.createElement("div", { className: "card" },
+      /* @__PURE__ */ import_react.default.createElement("div", { style:{display:"flex",gap:8,padding:"12px 16px 4px",flexWrap:"wrap",borderBottom:"1px solid #1e293b"} },
+        /* @__PURE__ */ import_react.default.createElement("button", { onClick:function(){setImgTab("all");}, style:{padding:"6px 16px",borderRadius:20,border:"none",fontWeight:700,fontSize:12,cursor:"pointer",background:imgTab==="all"?"#0ea5e9":"rgba(14,165,233,.12)",color:imgTab==="all"?"#fff":"#38bdf8"} }, "🗂️ All (", displaySkus.length, ")"),
+        /* @__PURE__ */ import_react.default.createElement("button", { onClick:function(){setImgTab("photo");}, style:{padding:"6px 16px",borderRadius:20,border:"none",fontWeight:700,fontSize:12,cursor:"pointer",background:imgTab==="photo"?"#059669":"rgba(5,150,105,.12)",color:imgTab==="photo"?"#fff":"#10b981"} }, "📸 Photo+ (", photoCount, ")"),
+        /* @__PURE__ */ import_react.default.createElement("button", { onClick:function(){setImgTab("nophoto");}, style:{padding:"6px 16px",borderRadius:20,border:"none",fontWeight:700,fontSize:12,cursor:"pointer",background:imgTab==="nophoto"?"#f59e0b":"rgba(245,158,11,.12)",color:imgTab==="nophoto"?"#fff":"#fbbf24"} }, "🖼️ Needs Image (", noPhotoCount, ")")
+      ),
+      /* @__PURE__ */ import_react.default.createElement("div", { className: "table-wrap" }, /* @__PURE__ */ import_react.default.createElement("table", null, /* @__PURE__ */ import_react.default.createElement("thead", null, /* @__PURE__ */ import_react.default.createElement("tr", null, /* @__PURE__ */ import_react.default.createElement("th", { style: { width: 36, textAlign: "center" } },
                   /* @__PURE__ */ import_react.default.createElement("input", { type: "checkbox", style: { width: 16, height: 16, cursor: "pointer", accentColor: "#0ea5e9" },
                     checked: displaySkus.length > 0 && selectedIds.size === displaySkus.length,
                     onChange: toggleSelectAll,
                     title: "Select All"
                   })
                 ),
-                /* @__PURE__ */ import_react.default.createElement("th", null, "SKU Code"), /* @__PURE__ */ import_react.default.createElement("th", null, "Product"), /* @__PURE__ */ import_react.default.createElement("th", null, "Category"), /* @__PURE__ */ import_react.default.createElement("th", null, "Supplier"), /* @__PURE__ */ import_react.default.createElement("th", null, "Warehouse"), /* @__PURE__ */ import_react.default.createElement("th", null, "Cost"), /* @__PURE__ */ import_react.default.createElement("th", null, "Retail"), /* @__PURE__ */ import_react.default.createElement("th", null, "WH Fee"), /* @__PURE__ */ import_react.default.createElement("th", null, "Profit/Unit"), /* @__PURE__ */ import_react.default.createElement("th", null, "Stock"), /* @__PURE__ */ import_react.default.createElement("th", null, "Status"), /* @__PURE__ */ import_react.default.createElement("th", null, "Details"), !readOnly && /* @__PURE__ */ import_react.default.createElement("th", null, "Remove"))), /* @__PURE__ */ import_react.default.createElement("tbody", null, displaySkus.map((s) => {
+                /* @__PURE__ */ import_react.default.createElement("th", null, "SKU Code"), /* @__PURE__ */ import_react.default.createElement("th", { style:{width:52,textAlign:"center"} }, "📸"), /* @__PURE__ */ import_react.default.createElement("th", null, "Product"), /* @__PURE__ */ import_react.default.createElement("th", null, "Category"), /* @__PURE__ */ import_react.default.createElement("th", null, "Supplier"), /* @__PURE__ */ import_react.default.createElement("th", null, "Warehouse"), /* @__PURE__ */ import_react.default.createElement("th", null, "Cost"), /* @__PURE__ */ import_react.default.createElement("th", null, "Retail"), /* @__PURE__ */ import_react.default.createElement("th", null, "WH Fee"), /* @__PURE__ */ import_react.default.createElement("th", null, "Profit/Unit"), /* @__PURE__ */ import_react.default.createElement("th", null, "Stock"), /* @__PURE__ */ import_react.default.createElement("th", null, "Status"), /* @__PURE__ */ import_react.default.createElement("th", null, "Details"), !readOnly && /* @__PURE__ */ import_react.default.createElement("th", null, "Remove"))), /* @__PURE__ */ import_react.default.createElement("tbody", null, tabSkus.map((s) => {
       const m = (s.retail_price || 0) + (s.wh_fee || 0) - (s.cost_price || 0);
       return /* @__PURE__ */ import_react.default.createElement("tr", { key: s.id, style: { background: selectedIds.has(s.id) ? "rgba(14,165,233,.08)" : undefined } },
         /* @__PURE__ */ import_react.default.createElement("td", { style: { textAlign: "center", width: 36 } },
@@ -14272,7 +14317,28 @@ showCsv && /* @__PURE__ */ import_react.default.createElement("div", { style: { 
             onChange: () => toggleSelect(s.id)
           })
         ),
-        /* @__PURE__ */ import_react.default.createElement("td", { style: { fontFamily: "monospace" } }, s.sku_code), /* @__PURE__ */ import_react.default.createElement("td", { style: { display: "flex", alignItems: "center", gap: 6 } }, s.name, /* @__PURE__ */ import_react.default.createElement(HeartButton, { skuId: s.id, initialLikes: s.likes || 0, likedBy: s.liked_by || [], userId: "admin" })), /* @__PURE__ */ import_react.default.createElement("td", null, s.category), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11, color: "#7dd3fc" } }, s.supplier_name || "\u2014"), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11 } }, s.warehouse || "Ahsan Aslam \u2014 USA"), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (s.cost_price || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (s.retail_price || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (s.wh_fee || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", { style: { color: m > 0 ? "#059669" : "#dc2626", fontWeight: 600 } }, "PKR ", m.toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement("span", { style: { color: s.stock < 10 ? "#dc2626" : "#059669", fontWeight: 600 } }, s.stock), s.stock < 10 && /* @__PURE__ */ import_react.default.createElement("span", { className: "badge bg-red", style: { marginLeft: 4, fontSize: 10 } }, "Low")), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement(Badge, { status: s.status || "active" })), /* @__PURE__ */ import_react.default.createElement("td", null,
+        /* @__PURE__ */ import_react.default.createElement("td", { style: { fontFamily: "monospace" } }, s.sku_code),
+        /* @__PURE__ */ import_react.default.createElement("td", { style:{width:52,textAlign:"center",padding:"4px 6px"} },
+          (function(){
+            var imgUrl = parseDesc(s.description, s.sku_code).image;
+            if (imgUrl) {
+              return /* @__PURE__ */ import_react.default.createElement("img", { src:imgUrl, alt:s.name, title:s.name,
+                style:{width:40,height:40,objectFit:"contain",borderRadius:6,border:"1px solid #334155",background:"#0f172a"},
+                onError:function(e2){e2.target.style.display="none";}
+              });
+            }
+            return /* @__PURE__ */ import_react.default.createElement("label", { title:"Upload image for "+s.name,
+              style:{display:"inline-flex",alignItems:"center",justifyContent:"center",width:40,height:40,borderRadius:6,border:"2px dashed #475569",cursor:"pointer",fontSize:18,background:"rgba(14,165,233,.06)"},
+              htmlFor:"imgup-"+s.id
+            },
+              uploadingId===s.id ? "⏳" : "📷",
+              /* @__PURE__ */ import_react.default.createElement("input", { id:"imgup-"+s.id, type:"file", accept:"image/*", style:{display:"none"},
+                onChange:function(e2){ if(e2.target.files[0]) handleQuickUpload(s, e2.target.files[0]); e2.target.value=""; }
+              })
+            );
+          })()
+        ),
+        /* @__PURE__ */ import_react.default.createElement("td", { style: { display: "flex", alignItems: "center", gap: 6 } }, s.name, /* @__PURE__ */ import_react.default.createElement(HeartButton, { skuId: s.id, initialLikes: s.likes || 0, likedBy: s.liked_by || [], userId: "admin" })), /* @__PURE__ */ import_react.default.createElement("td", null, s.category), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11, color: "#7dd3fc" } }, s.supplier_name || "\u2014"), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11 } }, s.warehouse || "Ahsan Aslam \u2014 USA"), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (s.cost_price || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (s.retail_price || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (s.wh_fee || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", { style: { color: m > 0 ? "#059669" : "#dc2626", fontWeight: 600 } }, "PKR ", m.toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement("span", { style: { color: s.stock < 10 ? "#dc2626" : "#059669", fontWeight: 600 } }, s.stock), s.stock < 10 && /* @__PURE__ */ import_react.default.createElement("span", { className: "badge bg-red", style: { marginLeft: 4, fontSize: 10 } }, "Low")), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement(Badge, { status: s.status || "active" })), /* @__PURE__ */ import_react.default.createElement("td", null,
           /* @__PURE__ */ import_react.default.createElement("button", {
             style: { background:"rgba(14,165,233,.15)", color:"#38bdf8", border:"1px solid #0ea5e9", borderRadius:6, padding:"4px 10px", fontSize:11, fontWeight:700, cursor:"pointer" },
             onClick: () => {
