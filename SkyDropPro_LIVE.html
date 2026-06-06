@@ -13759,6 +13759,10 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
     const [showAdd, setShowAdd] = (0, import_react.useState)(false);
     const [showCsv, setShowCsv] = (0, import_react.useState)(false);
     const [removeConfirm, setRemoveConfirm] = (0, import_react.useState)(false);
+    const [adminViewSku, setAdminViewSku] = (0, import_react.useState)(null);
+    const [editDesc, setEditDesc] = (0, import_react.useState)("");
+    const [editImg, setEditImg] = (0, import_react.useState)("");
+    const [savingEdit, setSavingEdit] = (0, import_react.useState)(false);
     const [selectedIds, setSelectedIds] = (0, import_react.useState)(new Set());
     function toggleSelect(id) {
       setSelectedIds(prev => {
@@ -14043,7 +14047,82 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
     const regionFlag = region === "USA" ? "\u{1F1FA}\u{1F1F8}" : region === "UK" ? "\u{1F1EC}\u{1F1E7}" : "\u{1F30D}";
     const regionColor = region === "USA" ? "#3B82F6" : region === "UK" ? "#EF4444" : "#38bdf8";
     return /* @__PURE__ */ import_react.default.createElement("div", null,
-    showCsv && /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 } },
+    adminViewSku && /* @__PURE__ */ import_react.default.createElement("div", { style:{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:99998,display:"flex",alignItems:"center",justifyContent:"center",padding:16} },
+  /* @__PURE__ */ import_react.default.createElement("div", { style:{background:"#1e293b",border:"1px solid #334155",borderRadius:16,width:"100%",maxWidth:700,maxHeight:"92vh",display:"flex",flexDirection:"column",overflow:"hidden",boxShadow:"0 25px 60px rgba(0,0,0,.7)"} },
+
+    /* header */
+    /* @__PURE__ */ import_react.default.createElement("div", { style:{background:"linear-gradient(135deg,#0c2d4a,#0369a1)",padding:"16px 20px",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0} },
+      /* @__PURE__ */ import_react.default.createElement("div", null,
+        /* @__PURE__ */ import_react.default.createElement("div", { style:{fontSize:16,fontWeight:800,color:"#fff"} }, "🖼️ Product Details — ", adminViewSku.name),
+        /* @__PURE__ */ import_react.default.createElement("div", { style:{fontSize:12,color:"#7dd3fc",marginTop:2} }, adminViewSku.sku_code, " • ", adminViewSku.category, " • ", adminViewSku.warehouse || "")
+      ),
+      /* @__PURE__ */ import_react.default.createElement("button", { onClick:()=>setAdminViewSku(null), style:{background:"rgba(255,255,255,.15)",border:"none",borderRadius:6,padding:"5px 12px",color:"#fff",cursor:"pointer",fontSize:16} }, "✕")
+    ),
+
+    /* body */
+    /* @__PURE__ */ import_react.default.createElement("div", { style:{flex:1,overflowY:"auto",padding:"20px 22px",display:"flex",flexDirection:"column",gap:18} },
+
+      /* image preview area */
+      /* @__PURE__ */ import_react.default.createElement("div", null,
+        /* @__PURE__ */ import_react.default.createElement("label", { style:{fontSize:11,fontWeight:700,color:"#38bdf8",textTransform:"uppercase",letterSpacing:0.8,display:"block",marginBottom:8} }, "📷 Product Image URL (for eBay listings)"),
+        /* @__PURE__ */ import_react.default.createElement("input", {
+          value: editImg,
+          onChange: function(e2){ setEditImg(e2.target.value); },
+          placeholder: "Paste direct image link — e.g. https://i.imgur.com/abc.jpg",
+          style:{width:"100%",padding:"9px 12px",background:"#0f172a",border:"1px solid #334155",borderRadius:8,color:"#e2e8f0",fontSize:13,boxSizing:"border-box",outline:"none"}
+        }),
+        editImg
+          ? /* @__PURE__ */ import_react.default.createElement("div", { style:{marginTop:10,background:"#0f172a",borderRadius:10,border:"1px solid #1e293b",padding:12,textAlign:"center"} },
+              /* @__PURE__ */ import_react.default.createElement("img", { src:editImg, alt:adminViewSku.name, style:{maxHeight:200,maxWidth:"100%",objectFit:"contain",borderRadius:8}, onError:function(e2){e2.target.style.display="none";} }),
+              /* @__PURE__ */ import_react.default.createElement("div", { style:{marginTop:10,display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"} },
+                /* @__PURE__ */ import_react.default.createElement("a", { href:editImg, download:adminViewSku.sku_code, target:"_blank", rel:"noopener noreferrer",
+                  style:{background:"linear-gradient(135deg,#059669,#10b981)",color:"#fff",border:"none",borderRadius:6,padding:"7px 16px",fontSize:12,fontWeight:700,cursor:"pointer",textDecoration:"none",display:"inline-flex",alignItems:"center",gap:5}
+                }, "⬇️ Download Image"),
+                /* @__PURE__ */ import_react.default.createElement("a", { href:editImg, target:"_blank", rel:"noopener noreferrer",
+                  style:{background:"rgba(14,165,233,.15)",color:"#38bdf8",border:"1px solid #0ea5e9",borderRadius:6,padding:"7px 16px",fontSize:12,fontWeight:700,cursor:"pointer",textDecoration:"none",display:"inline-flex",alignItems:"center",gap:5}
+                }, "🔗 Open Full Size")
+              )
+            )
+          : /* @__PURE__ */ import_react.default.createElement("div", { style:{marginTop:10,background:"#0f172a",borderRadius:10,border:"2px dashed #334155",padding:"24px 16px",textAlign:"center",color:"#475569",fontSize:13} },
+              "🖼️ No image set. Paste an image URL above to add product photos for eBay."
+            )
+      ),
+
+      /* description editor */
+      /* @__PURE__ */ import_react.default.createElement("div", null,
+        /* @__PURE__ */ import_react.default.createElement("label", { style:{fontSize:11,fontWeight:700,color:"#38bdf8",textTransform:"uppercase",letterSpacing:0.8,display:"block",marginBottom:8} }, "📝 Product Description"),
+        /* @__PURE__ */ import_react.default.createElement("textarea", {
+          value: editDesc,
+          onChange: function(e2){ setEditDesc(e2.target.value); },
+          rows: 7,
+          style:{width:"100%",padding:"10px 12px",background:"#0f172a",border:"1px solid #334155",borderRadius:8,color:"#e2e8f0",fontSize:12,fontFamily:"monospace",resize:"vertical",boxSizing:"border-box",lineHeight:1.9,outline:"none"}
+        }),
+        /* @__PURE__ */ import_react.default.createElement("div", { style:{fontSize:11,color:"#475569",marginTop:4} }, "Tip: Separate each detail with  |  (pipe).  e.g. Brand: Nike | Size: 7cm | Colors: Black and White")
+      )
+    ),
+
+    /* footer */
+    /* @__PURE__ */ import_react.default.createElement("div", { style:{padding:"14px 20px",borderTop:"1px solid #334155",display:"flex",gap:10,flexShrink:0} },
+      /* @__PURE__ */ import_react.default.createElement("button", {
+        style:{flex:1,background:savingEdit?"#334155":"linear-gradient(135deg,#059669,#10b981)",color:"#fff",border:"none",borderRadius:8,padding:"10px 20px",fontSize:13,fontWeight:700,cursor:savingEdit?"not-allowed":"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6},
+        disabled: savingEdit,
+        onClick: async function() {
+          setSavingEdit(true);
+          try {
+            var combined = editDesc.trim() + (editImg.trim() ? " | Image: " + editImg.trim() : "");
+            await sbFetch("/rest/v1/skus?id=eq." + adminViewSku.id, { method:"PATCH", body:JSON.stringify({ description: combined }) });
+            setSkus(function(prev){ return prev.map(function(x){ return x.id === adminViewSku.id ? Object.assign({},x,{description:combined}) : x; }); });
+            setAdminViewSku(function(prev){ return Object.assign({},prev,{description:combined}); });
+            toast("✅ Saved — image & description updated", "success");
+          } catch(e2) { toast("Save failed: " + e2.message, "error"); }
+          setSavingEdit(false);
+        }
+      }, savingEdit ? "Saving..." : "✅ Save Changes"),
+      /* @__PURE__ */ import_react.default.createElement("button", { onClick:()=>setAdminViewSku(null), style:{background:"transparent",color:"#94a3b8",border:"1px solid #334155",borderRadius:8,padding:"10px 20px",fontSize:13,fontWeight:600,cursor:"pointer"} }, "Close")
+    )
+  )
+),
+showCsv && /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 } },
       /* @__PURE__ */ import_react.default.createElement("div", { style: { background: "#1e293b", border: "1px solid #334155", borderRadius: 16, width: "100%", maxWidth: 720, maxHeight: "90vh", display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "0 25px 60px rgba(0,0,0,.6)" } },
         /* @__PURE__ */ import_react.default.createElement("div", { style: { background: "linear-gradient(135deg,#0c2d4a,#0369a1)", padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 } },
           /* @__PURE__ */ import_react.default.createElement("div", null,
@@ -14150,7 +14229,7 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
                     title: "Select All"
                   })
                 ),
-                /* @__PURE__ */ import_react.default.createElement("th", null, "SKU Code"), /* @__PURE__ */ import_react.default.createElement("th", null, "Product"), /* @__PURE__ */ import_react.default.createElement("th", null, "Category"), /* @__PURE__ */ import_react.default.createElement("th", null, "Supplier"), /* @__PURE__ */ import_react.default.createElement("th", null, "Warehouse"), /* @__PURE__ */ import_react.default.createElement("th", null, "Cost"), /* @__PURE__ */ import_react.default.createElement("th", null, "Retail"), /* @__PURE__ */ import_react.default.createElement("th", null, "WH Fee"), /* @__PURE__ */ import_react.default.createElement("th", null, "Profit/Unit"), /* @__PURE__ */ import_react.default.createElement("th", null, "Stock"), /* @__PURE__ */ import_react.default.createElement("th", null, "Status"), !readOnly && /* @__PURE__ */ import_react.default.createElement("th", null, "Remove"))), /* @__PURE__ */ import_react.default.createElement("tbody", null, displaySkus.map((s) => {
+                /* @__PURE__ */ import_react.default.createElement("th", null, "SKU Code"), /* @__PURE__ */ import_react.default.createElement("th", null, "Product"), /* @__PURE__ */ import_react.default.createElement("th", null, "Category"), /* @__PURE__ */ import_react.default.createElement("th", null, "Supplier"), /* @__PURE__ */ import_react.default.createElement("th", null, "Warehouse"), /* @__PURE__ */ import_react.default.createElement("th", null, "Cost"), /* @__PURE__ */ import_react.default.createElement("th", null, "Retail"), /* @__PURE__ */ import_react.default.createElement("th", null, "WH Fee"), /* @__PURE__ */ import_react.default.createElement("th", null, "Profit/Unit"), /* @__PURE__ */ import_react.default.createElement("th", null, "Stock"), /* @__PURE__ */ import_react.default.createElement("th", null, "Status"), /* @__PURE__ */ import_react.default.createElement("th", null, "Details"), !readOnly && /* @__PURE__ */ import_react.default.createElement("th", null, "Remove"))), /* @__PURE__ */ import_react.default.createElement("tbody", null, displaySkus.map((s) => {
       const m = (s.retail_price || 0) + (s.wh_fee || 0) - (s.cost_price || 0);
       return /* @__PURE__ */ import_react.default.createElement("tr", { key: s.id, style: { background: selectedIds.has(s.id) ? "rgba(14,165,233,.08)" : undefined } },
         /* @__PURE__ */ import_react.default.createElement("td", { style: { textAlign: "center", width: 36 } },
@@ -14159,7 +14238,17 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
             onChange: () => toggleSelect(s.id)
           })
         ),
-        /* @__PURE__ */ import_react.default.createElement("td", { style: { fontFamily: "monospace" } }, s.sku_code), /* @__PURE__ */ import_react.default.createElement("td", { style: { display: "flex", alignItems: "center", gap: 6 } }, s.name, /* @__PURE__ */ import_react.default.createElement(HeartButton, { skuId: s.id, initialLikes: s.likes || 0, likedBy: s.liked_by || [], userId: "admin" })), /* @__PURE__ */ import_react.default.createElement("td", null, s.category), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11, color: "#7dd3fc" } }, s.supplier_name || "\u2014"), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11 } }, s.warehouse || "Ahsan Aslam \u2014 USA"), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (s.cost_price || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (s.retail_price || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (s.wh_fee || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", { style: { color: m > 0 ? "#059669" : "#dc2626", fontWeight: 600 } }, "PKR ", m.toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement("span", { style: { color: s.stock < 10 ? "#dc2626" : "#059669", fontWeight: 600 } }, s.stock), s.stock < 10 && /* @__PURE__ */ import_react.default.createElement("span", { className: "badge bg-red", style: { marginLeft: 4, fontSize: 10 } }, "Low")), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement(Badge, { status: s.status || "active" })), !readOnly && /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-danger btn-xs", onClick: () => removeSku(s.id) }, "\u2715 Remove")));
+        /* @__PURE__ */ import_react.default.createElement("td", { style: { fontFamily: "monospace" } }, s.sku_code), /* @__PURE__ */ import_react.default.createElement("td", { style: { display: "flex", alignItems: "center", gap: 6 } }, s.name, /* @__PURE__ */ import_react.default.createElement(HeartButton, { skuId: s.id, initialLikes: s.likes || 0, likedBy: s.liked_by || [], userId: "admin" })), /* @__PURE__ */ import_react.default.createElement("td", null, s.category), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11, color: "#7dd3fc" } }, s.supplier_name || "\u2014"), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11 } }, s.warehouse || "Ahsan Aslam \u2014 USA"), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (s.cost_price || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (s.retail_price || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", (s.wh_fee || 0).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", { style: { color: m > 0 ? "#059669" : "#dc2626", fontWeight: 600 } }, "PKR ", m.toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement("span", { style: { color: s.stock < 10 ? "#dc2626" : "#059669", fontWeight: 600 } }, s.stock), s.stock < 10 && /* @__PURE__ */ import_react.default.createElement("span", { className: "badge bg-red", style: { marginLeft: 4, fontSize: 10 } }, "Low")), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement(Badge, { status: s.status || "active" })), /* @__PURE__ */ import_react.default.createElement("td", null,
+          /* @__PURE__ */ import_react.default.createElement("button", {
+            style: { background:"rgba(14,165,233,.15)", color:"#38bdf8", border:"1px solid #0ea5e9", borderRadius:6, padding:"4px 10px", fontSize:11, fontWeight:700, cursor:"pointer" },
+            onClick: () => {
+              var d = parseDesc(s.description || "");
+              setAdminViewSku(s);
+              setEditDesc(d.all.join(" | "));
+              setEditImg(d.image || "");
+            }
+          }, "\uD83D\uDC41\uFE0F Details")
+        ), !readOnly && /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-danger btn-xs", onClick: () => removeSku(s.id) }, "\u2715 Remove")));
     }))))), showAdd && /* @__PURE__ */ import_react.default.createElement(
       Modal,
       {
@@ -14450,12 +14539,15 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
       setOrdersLd(false);
     }
     function parseDesc(desc) {
-      if (!desc) return { size:"", material:"", note:"" };
+      if (!desc) return { size:"", material:"", note:"", image:"", all:[] };
       const parts = desc.split("|").map(s => s.trim());
       const size = parts.find(p => p.toLowerCase().startsWith("size:"))?.replace(/^size:\s*/i,"") || "";
       const note = parts.find(p => p.toLowerCase().includes("premium") || p.toLowerCase().includes("quality")) || "";
       const orig = parts.find(p => p.toLowerCase().startsWith("orig")) || "";
-      return { size, note, orig, all: parts };
+      const imgSeg = parts.find(p => p.toLowerCase().startsWith("image:"));
+      const image = imgSeg ? imgSeg.replace(/^image:\s*/i,"").trim() : "";
+      const all = parts.filter(p => !p.toLowerCase().startsWith("image:"));
+      return { size, note, orig, image, all };
     }
     function downloadProductSheet(s) {
       var info = parseDesc(s.description);
@@ -14474,7 +14566,9 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
         + ".desc-box{background:#f1f5f9;border-radius:8px;padding:14px 18px;margin:16px 0}"
         + ".footer{margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8}"
         + "@media print{.no-print{display:none}}</style></head><body>"
-        + "<div class='hdr'><h1>" + s.name + "</h1><p>SKU: " + s.sku_code + " &nbsp;|&nbsp; SkyDrop Pro — SkyCart</p></div>"
+        + "<div class='hdr'>"
+        + (parseDesc(s.description).image ? "<img src='" + parseDesc(s.description).image + "' style='float:right;max-height:100px;max-width:140px;object-fit:contain;border-radius:8px;margin-left:16px;' onerror=\"this.style.display='none'\"/>" : "")
+        + "<h1>" + s.name + "</h1><p>SKU: " + s.sku_code + " &nbsp;|&nbsp; SkyDrop Pro — SkyCart</p></div>"
         + "<div class='body'>"
         + "<div class='no-print' style='margin-bottom:20px;display:flex;gap:10px'>"
         + "<button onclick='window.print()' style='background:#0369a1;color:#fff;border:none;padding:10px 20px;border-radius:6px;font-size:14px;cursor:pointer'>Print / Save PDF</button>"
@@ -14647,8 +14741,17 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
         ),
         /* @__PURE__ */ import_react.default.createElement("div", { style: { flex:1,overflowY:"auto",padding:"20px 22px" } },
           /* @__PURE__ */ import_react.default.createElement("div", { style: { width:"100%",height:160,background:"linear-gradient(135deg,#0f172a,#1e293b)",borderRadius:10,border:"2px dashed #334155",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",marginBottom:16,position:"relative" } },
-            /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize:52 } }, "\u{1F4E6}"),
-            /* @__PURE__ */ import_react.default.createElement("div", { style: { fontSize:11,color:"#475569",marginTop:6 } }, showDetail.name),
+            parseDesc(showDetail.description).image
+              ? /* @__PURE__ */ import_react.default.createElement("img", {
+                  src: parseDesc(showDetail.description).image,
+                  alt: showDetail.name,
+                  style:{maxHeight:148,maxWidth:"95%",objectFit:"contain",borderRadius:8},
+                  onError:function(e2){ e2.target.style.display="none"; }
+                })
+              : /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null,
+                  /* @__PURE__ */ import_react.default.createElement("div", { style:{fontSize:52} }, "\u{1F4E6}"),
+                  /* @__PURE__ */ import_react.default.createElement("div", { style:{fontSize:11,color:"#475569",marginTop:6} }, showDetail.name)
+                ),
             /* @__PURE__ */ import_react.default.createElement("div", { style: { position:"absolute",top:8,right:8,background:"rgba(14,165,233,.15)",border:"1px solid #0ea5e9",borderRadius:6,padding:"3px 8px",fontSize:10,color:"#38bdf8" } }, showDetail.stock > 0 ? showDetail.stock+" in stock" : "Out of Stock")
           ),
           /* @__PURE__ */ import_react.default.createElement("div", { style: { display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14 } },
@@ -14694,7 +14797,14 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
             onClick:function(){ addToCart(showDetail); setShowDetail(null); }
           }, "\u{1F6D2} Add to Cart"),
           /* @__PURE__ */ import_react.default.createElement("button", { className:"btn btn-success", style:{flex:1,justifyContent:"center"}, onClick:function(){downloadProductSheet(showDetail);} }, "\u{1F4C4} Download Sheet"),
-          /* @__PURE__ */ import_react.default.createElement("button", { className:"btn btn-outline btn-sm", onClick:function(){setShowDetail(null);} }, "Close")
+          /* @__PURE__ */ import_react.default.createElement("button", { className:"btn btn-outline btn-sm", onClick:function(){setShowDetail(null);} }, "Close"),
+          parseDesc(showDetail.description).image && /* @__PURE__ */ import_react.default.createElement("a", {
+            href: parseDesc(showDetail.description).image,
+            download: showDetail.sku_code + "_image",
+            target: "_blank",
+            rel: "noopener noreferrer",
+            style:{flex:1,background:"linear-gradient(135deg,#059669,#10b981)",color:"#fff",borderRadius:8,padding:"10px 16px",fontSize:13,fontWeight:700,textDecoration:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:6}
+          }, "\uD83D\uDCF7 Download Image")
         )
       )
     ),
@@ -16407,72 +16517,132 @@ react-dom/cjs/react-dom-client.production.js:
 </script>
 <script>
 (function(){
-var SB="https://hyxteancjleykldhkvfs.supabase.co";
-var KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh5eHRlYW5jamxleWtsZGhrdmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4NDQwNTksImV4cCI6MjA5MzQyMDA1OX0.tvPZFNWfXGyemglClHfbUyEeg3T2W-pTjMm9m1F2XmQ";
-var wrap=document.createElement("div");
-wrap.style.cssText="position:fixed;bottom:22px;right:22px;z-index:99999;font-family:'Segoe UI',sans-serif;display:flex;flex-direction:column;align-items:flex-end;gap:8px";
-var panel=document.createElement("div");
-panel.style.cssText="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:18px;width:290px;box-shadow:0 10px 40px rgba(0,0,0,.6);display:none";
-panel.innerHTML='<div style="font-size:13px;font-weight:800;color:#38bdf8;margin-bottom:12px">⚙️ Admin Quick Actions</div><div id="skySt" style="font-size:11px;color:#64748b;min-height:16px;margin-bottom:6px"></div><div style="height:6px;background:#0f172a;border-radius:99px;overflow:hidden;margin-bottom:12px"><div id="skyFill" style="height:100%;background:linear-gradient(90deg,#059669,#10b981);border-radius:99px;width:0%;transition:width .2s"></div></div><button id="skyPushBtn" style="width:100%;padding:10px;border:none;border-radius:8px;background:linear-gradient(135deg,#059669,#10b981);color:#fff;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px">🚀 Push All SKU Descriptions to Supabase</button><button id="skyCloseBtn" style="width:100%;padding:8px;border:1px solid #334155;border-radius:8px;background:transparent;color:#64748b;font-size:12px;cursor:pointer">Close</button>';
-var fab=document.createElement("button");
-fab.innerHTML="⚙️ Admin Tools";
-fab.style.cssText="background:linear-gradient(135deg,#0369a1,#0ea5e9);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(14,165,233,.4)";
-wrap.appendChild(panel);wrap.appendChild(fab);
-document.body.appendChild(wrap);
-fab.onclick=function(){panel.style.display=panel.style.display==="none"?"block":"none";};
-document.getElementById("skyCloseBtn").onclick=function(){panel.style.display="none";};
-document.getElementById("skyPushBtn").onclick=async function(){
-  var btn=this;btn.disabled=true;btn.textContent="Pushing...";
-  document.getElementById("skySt").style.color="#38bdf8";
-  var r=await fetch(SB+"/rest/v1/skus?select=sku_code,name,size,category,warehouse,stock&limit=500",{headers:{apikey:KEY,Authorization:"Bearer "+KEY}});
-  var skus=await r.json();
-  var done=0,errs=0;
-  for(var i=0;i<skus.length;i++){
-    var p=skus[i];
-    try{
-      var res=await fetch(SB+"/rest/v1/skus?sku_code=eq."+encodeURIComponent(p.sku_code),{method:"PATCH",headers:{apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json",Prefer:"return=representation"},body:JSON.stringify({description:mkD(p)})});
-      var d=await res.json();if(d&&d.length)done++;else errs++;
-    }catch(e){errs++;}
-    document.getElementById("skyFill").style.width=Math.round((i+1)/skus.length*100)+"%";
-    document.getElementById("skySt").textContent=(i+1)+"/"+skus.length+" — "+done+" updated";
-    if((i+1)%10===0)await new Promise(function(r){setTimeout(r,30);});
+  var SB="https://hyxteancjleykldhkvfs.supabase.co";
+  var KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh5eHRlYW5jamxleWtsZGhrdmZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4NDQwNTksImV4cCI6MjA5MzQyMDA1OX0.tvPZFNWfXGyemglClHfbUyEeg3T2W-pTjMm9m1F2XmQ";
+
+  // Create wrapper
+  var wrap = document.createElement("div");
+  wrap.style.cssText = "position:fixed;bottom:22px;right:22px;z-index:99999;font-family:'Segoe UI',sans-serif;display:flex;flex-direction:column;align-items:flex-end;gap:8px";
+
+  // Panel
+  var panel = document.createElement("div");
+  panel.style.cssText = "background:#1e293b;border:1px solid #334155;border-radius:12px;padding:18px;width:290px;box-shadow:0 10px 40px rgba(0,0,0,.6);display:none";
+
+  var title = document.createElement("div");
+  title.style.cssText = "font-size:13px;font-weight:800;color:#38bdf8;margin-bottom:12px";
+  title.textContent = "⚙️ Admin Quick Actions";
+
+  var statusEl = document.createElement("div");
+  statusEl.id = "skyPanelStatus";
+  statusEl.style.cssText = "font-size:11px;color:#64748b;min-height:16px;margin-bottom:6px";
+
+  var progressWrap = document.createElement("div");
+  progressWrap.style.cssText = "height:6px;background:#0f172a;border-radius:99px;overflow:hidden;margin-bottom:12px";
+  var progressFill = document.createElement("div");
+  progressFill.id = "skyPanelFill";
+  progressFill.style.cssText = "height:100%;background:linear-gradient(90deg,#059669,#10b981);border-radius:99px;width:0%;transition:width .2s";
+  progressWrap.appendChild(progressFill);
+
+  var pushBtn = document.createElement("button");
+  pushBtn.id = "skyPanelPushBtn";
+  pushBtn.textContent = "🚀 Push All SKU Descriptions to Supabase";
+  pushBtn.style.cssText = "width:100%;padding:10px;border:none;border-radius:8px;background:linear-gradient(135deg,#059669,#10b981);color:#fff;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px";
+
+  var closeBtn = document.createElement("button");
+  closeBtn.textContent = "Close";
+  closeBtn.style.cssText = "width:100%;padding:8px;border:1px solid #334155;border-radius:8px;background:transparent;color:#64748b;font-size:12px;cursor:pointer";
+
+  panel.appendChild(title);
+  panel.appendChild(statusEl);
+  panel.appendChild(progressWrap);
+  panel.appendChild(pushBtn);
+  panel.appendChild(closeBtn);
+
+  // FAB
+  var fab = document.createElement("button");
+  fab.textContent = "⚙️ Admin Tools";
+  fab.style.cssText = "background:linear-gradient(135deg,#0369a1,#0ea5e9);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(14,165,233,.4)";
+
+  wrap.appendChild(panel);
+  wrap.appendChild(fab);
+  document.body.appendChild(wrap); // Add to DOM FIRST
+
+  // Wire events AFTER elements are in DOM
+  fab.onclick = function() {
+    panel.style.display = (panel.style.display === "none") ? "block" : "none";
+  };
+  closeBtn.onclick = function() {
+    panel.style.display = "none";
+  };
+  pushBtn.onclick = async function() {
+    var btn = this;
+    btn.disabled = true; btn.textContent = "Pushing...";
+    statusEl.style.color = "#38bdf8"; statusEl.textContent = "Loading SKUs...";
+    progressFill.style.width = "0%";
+    try {
+      var r = await fetch(SB + "/rest/v1/skus?select=sku_code,name,size,category,warehouse,stock&limit=500", {
+        headers: { apikey: KEY, Authorization: "Bearer " + KEY }
+      });
+      var skus = await r.json();
+      var done = 0, errs = 0;
+      for (var i = 0; i < skus.length; i++) {
+        var p = skus[i];
+        try {
+          var res = await fetch(SB + "/rest/v1/skus?sku_code=eq." + encodeURIComponent(p.sku_code), {
+            method: "PATCH",
+            headers: { apikey: KEY, Authorization: "Bearer " + KEY, "Content-Type": "application/json", Prefer: "return=representation" },
+            body: JSON.stringify({ description: mkD(p) })
+          });
+          var d = await res.json();
+          if (d && d.length) done++; else errs++;
+        } catch(e) { errs++; }
+        progressFill.style.width = Math.round((i+1)/skus.length*100) + "%";
+        statusEl.textContent = (i+1) + "/" + skus.length + " — " + done + " updated";
+        if ((i+1) % 10 === 0) await new Promise(function(r){ setTimeout(r, 30); });
+      }
+      statusEl.textContent = "✅ Done — " + done + " updated | " + errs + " errors";
+      statusEl.style.color = "#34d399";
+    } catch(e) {
+      statusEl.textContent = "❌ Error: " + e.message;
+      statusEl.style.color = "#f87171";
+    }
+    btn.disabled = false; btn.textContent = "✅ Complete — Run Again";
+  };
+
+  function mkD(p) {
+    var nm=(p.name||"").trim(), sz=p.size||"", cat=p.category||"", wh=p.warehouse||"Ahsan Aslam — USA";
+    var stk=(p.stock>0)?p.stock+" units available":"Out of stock";
+    var n=nm.toUpperCase();
+    var backing=cat==="Iron-On Patches"?"Iron-on adhesive":"Dual iron-on + sew-on";
+    var dk=["RETIRED","I AM DEAF","BLIND DOG","STAFF X LAB","IN TRAINING","DO NOT FEED","DO NOT TOUCH","I NEED SPACE","SEIZURE SUPPORT","XL BULLY","AMERICAN BULL DOG","EMOTIONAL SUPPORT"];
+    if(cat==="Dog Vest Patches"||dk.some(function(k){return n.indexOf(k)>=0;})){
+      var sc=["S","M","L"].indexOf(p.size)>=0?p.size:"M", pt=nm.replace(/ [SML]$/,"").trim();
+      var pm={"RETIRED":"Retired military/police dog","I AM DEAF":"Deaf dog alert","BLIND DOG":"Blind dog alert","STAFF X LAB":"Staffie x Lab ID","IN TRAINING":"Dog in training","DO NOT FEED":"Dietary restriction","DO NOT TOUCH":"Needs personal space","I NEED SPACE":"Anxious dog","SEIZURE SUPPORT":"Seizure response dog","XL BULLY":"Not XL Bully","AMERICAN BULL DOG":"American Bulldog ID","EMOTIONAL SUPPORT":"Emotional support animal"};
+      var pur="Dog ID"; for(var k in pm){if(n.indexOf(k)>=0){pur=pm[k];break;}}
+      return[nm+" — Dog Vest Patch","Patch Text: "+pt,"Size: "+sc,"Purpose: "+pur,"Material: Embroidery on twill","Backing: Hook-and-loop Velcro","Border: Merrowed","Care: Spot clean","Origin: "+wh,"Stock: "+stk].join(" | ");
+    }
+    if(cat==="Smocked Bags"){var c=nm.replace(/smocked bag/i,"").trim()||nm;return[nm+" — Smocked Bag","Color: "+c,"Dimensions: "+sz,"Construction: Traditional smocking","Care: Gentle cold wash","Origin: "+wh,"Stock: "+stk].join(" | ");}
+    if(cat==="Scarves"){var c2=nm.replace(/scarf/i,"").trim()||nm;return[nm+" — Fashion Scarf","Color: "+c2,"Dimensions: "+sz,"Material: Soft fabric","Styling: Neck wrap, shawl, head wrap","Care: Gentle cold wash","Origin: "+wh,"Stock: "+stk].join(" | ");}
+    if(n.indexOf("RFID")>=0||n.indexOf("WALLET")>=0)return[nm+" — RFID Wallet","Size: "+sz,"Blocks 13.56MHz NFC/RFID","Slim profile","Origin: "+wh,"Stock: "+stk].join(" | ");
+    if(n.indexOf("KNIFE")>=0){var kc=n.indexOf("RED")>=0?"Red":"Black";return[nm+" — Folding Knife","Color: "+kc,"Folded: "+sz,"Quality steel blade","Origin: "+wh,"Stock: "+stk].join(" | ");}
+    var brand="",design="",colors="";
+    if(n.indexOf("TOMMY")>=0){brand="Tommy Hilfiger (TH)";design=n.indexOf("SHIELD")>=0?"TH Shield Crest":n.indexOf("DARK NAVY")>=0?"Tommy Text Dark Navy":"Tommy Wordmark";colors="Navy, red and white";}
+    else if(n.indexOf("NIKE")>=0){brand="Nike";design="Nike Swoosh";colors="Black and white";}
+    else if(n.indexOf("MONCLER")>=0){brand="Moncler";design="Moncler Bird Emblem";colors=n.indexOf("BLACK")>=0?"Black and white":"Classic palette";}
+    else if(n.indexOf("NORTH FACE")>=0){brand="The North Face";var cf=n.indexOf("WHITE")>=0?"White":n.indexOf("RED")>=0?"Red":n.indexOf("YELLOW")>=0?"Yellow":"Black";design="TNF Logo "+cf;colors=cf+" and white";}
+    else if(n.indexOf("CANADA GOOSE")>=0){brand="Canada Goose";design="CG Disc Logo";colors=n.indexOf("BLACK")>=0?"Black and white":"Blue and red";}
+    else if(n.indexOf("BELSTAFF")>=0){brand="Belstaff";design=n.indexOf("EAGLE")>=0?"Eagle Design":"IS Logo";colors=n.indexOf("YELLOW")>=0?"Yellow":n.indexOf("SKIN")>=0?"Skin":"Gray";}
+    else if(n.indexOf("LOUIS VUITTON")>=0||p.sku_code.indexOf("EPLV")===0){brand="Louis Vuitton";design=n.indexOf("HEART")>=0?"LV Heart":n.indexOf("CIRCLE")>=0?"LV Circle":"LV Monogram";colors="LV tan and brown";}
+    else if(n.indexOf("HARLEY")>=0){brand="Harley-Davidson";design=n.indexOf("OVAL")>=0?"Oval Logo":"Bar-and-Shield";colors="Orange, black, white";}
+    else if(n.indexOf("GUCCI")>=0||p.sku_code==="IOG-01"||p.sku_code==="EPG-01"){brand="Gucci";design="GG Monogram";colors="Tan and brown";}
+    else if(n.indexOf("USA")>=0||n.indexOf("TEXAS")>=0||n.indexOf("CUBA")>=0){brand="Patriotic";design=n.indexOf("CROWN")>=0?"USA Crown":n.indexOf("WAVE")>=0?"USA Wave":n.indexOf("CUBA")>=0?"Cuba Flag":"USA Flag";colors="Red, white, blue";}
+    else if(n.indexOf("NFL")>=0){brand="NFL";design="NFL Shield";colors="Navy, red, white";}
+    else if(n.indexOf("HOCKEY UTAH")>=0){brand="Utah Hockey Club";design="UHC Logo";colors="Blue and white";}
+    else if(n.indexOf("SUPER BOWL")>=0||n.indexOf("LIX")>=0){brand="Super Bowl LIX";design="SB LIX Design";colors="Gold and Eagles green";}
+    else{brand=cat;design=nm+" Design";colors="Multi-colour";}
+    var app=cat==="Iron-On Patches"?"Application: Iron-On 30-45 sec max heat, cool fully":"Application: Iron-On 30-45 sec, cool. Or sew around edges";
+    return[nm+" — Premium "+(cat||"Patch"),brand?"Brand: "+brand:"","Design: "+design,"Size: "+sz,"Backing: "+backing,colors?"Colors: "+colors:"","Border: Merrowed overlock","Threads: Colorfast",app,"Care: Hand wash only","Origin: "+wh,"Stock: "+stk].filter(Boolean).join(" | ");
   }
-  document.getElementById("skySt").textContent="✅ Done — "+done+" updated | "+errs+" errors";
-  document.getElementById("skySt").style.color="#34d399";
-  btn.disabled=false;btn.textContent="✅ Complete — Run Again";
-};
-function mkD(p){
-  var nm=(p.name||"").trim(),sz=p.size||"",cat=p.category||"",wh=p.warehouse||"Ahsan Aslam — USA",stk=(p.stock>0)?p.stock+" units available":"Out of stock";
-  var n=nm.toUpperCase(),backing=cat==="Iron-On Patches"?"Iron-on adhesive":"Dual iron-on + sew-on";
-  var dk=["RETIRED","I AM DEAF","BLIND DOG","STAFF X LAB","IN TRAINING","DO NOT FEED","DO NOT TOUCH","I NEED SPACE","SEIZURE SUPPORT","XL BULLY","AMERICAN BULL DOG","EMOTIONAL SUPPORT"];
-  if(cat==="Dog Vest Patches"||dk.some(function(k){return n.indexOf(k)>=0;})){
-    var sc=["S","M","L"].indexOf(p.size)>=0?p.size:"M",pt=nm.replace(/ [SML]$/,"").trim();
-    var pm={"RETIRED":"Retired military/police dog","I AM DEAF":"Deaf dog alert","BLIND DOG":"Blind dog alert","STAFF X LAB":"Staffie x Lab ID","IN TRAINING":"Dog in training","DO NOT FEED":"Dietary restriction","DO NOT TOUCH":"Needs personal space","I NEED SPACE":"Anxious dog","SEIZURE SUPPORT":"Seizure response dog","XL BULLY":"Not XL Bully","AMERICAN BULL DOG":"American Bulldog ID","EMOTIONAL SUPPORT":"Emotional support animal"};
-    var pur="Dog ID";for(var k in pm){if(n.indexOf(k)>=0){pur=pm[k];break;}}
-    return[nm+" — Dog Vest Patch","Patch Text: "+pt,"Size: "+sc,"Purpose: "+pur,"Material: Embroidery on twill","Backing: Hook-and-loop Velcro","Border: Merrowed","Care: Spot clean","Origin: "+wh,"Stock: "+stk].join(" | ");
-  }
-  if(cat==="Smocked Bags"){var c=nm.replace(/smocked bag/i,"").trim()||nm;return[nm+" — Smocked Bag","Color: "+c,"Dimensions: "+sz,"Construction: Traditional smocking","Care: Gentle cold wash","Origin: "+wh,"Stock: "+stk].join(" | ");}
-  if(cat==="Scarves"){var c2=nm.replace(/scarf/i,"").trim()||nm;return[nm+" — Fashion Scarf","Color: "+c2,"Dimensions: "+sz,"Material: Soft fabric","Styling: Neck wrap, shawl, head wrap","Care: Gentle cold wash","Origin: "+wh,"Stock: "+stk].join(" | ");}
-  if(n.indexOf("RFID")>=0||n.indexOf("WALLET")>=0)return[nm+" — RFID Wallet","Size: "+sz,"Blocks 13.56MHz NFC/RFID","Slim profile","Origin: "+wh,"Stock: "+stk].join(" | ");
-  if(n.indexOf("KNIFE")>=0){var kc=n.indexOf("RED")>=0?"Red":"Black";return[nm+" — Folding Knife","Color: "+kc,"Folded: "+sz,"Quality steel blade","Origin: "+wh,"Stock: "+stk].join(" | ");}
-  var brand="",design="",colors="";
-  if(n.indexOf("TOMMY")>=0){brand="Tommy Hilfiger";design=n.indexOf("SHIELD")>=0?"TH Shield Crest":n.indexOf("DARK NAVY")>=0?"Tommy Text Dark Navy":"Tommy Wordmark";colors="Navy, red and white";}
-  else if(n.indexOf("NIKE")>=0){brand="Nike";design="Nike Swoosh";colors="Black and white";}
-  else if(n.indexOf("MONCLER")>=0){brand="Moncler";design="Moncler Bird Emblem";colors=n.indexOf("BLACK")>=0?"Black and white":"Classic palette";}
-  else if(n.indexOf("NORTH FACE")>=0){brand="The North Face";var cf=n.indexOf("WHITE")>=0?"White":n.indexOf("RED")>=0?"Red":n.indexOf("YELLOW")>=0?"Yellow":"Black";design="TNF Logo "+cf;colors=cf+" and white";}
-  else if(n.indexOf("CANADA GOOSE")>=0){brand="Canada Goose";design="CG Disc Logo";colors=n.indexOf("BLACK")>=0?"Black and white":"Blue and red";}
-  else if(n.indexOf("BELSTAFF")>=0){brand="Belstaff";design=n.indexOf("EAGLE")>=0?"Eagle Design":"IS Logo";colors=n.indexOf("YELLOW")>=0?"Yellow":n.indexOf("SKIN")>=0?"Skin":"Gray";}
-  else if(n.indexOf("LOUIS VUITTON")>=0||p.sku_code.indexOf("EPLV")===0){brand="Louis Vuitton";design=n.indexOf("HEART")>=0?"LV Heart":n.indexOf("CIRCLE")>=0?"LV Circle":"LV Monogram";colors="LV tan and brown";}
-  else if(n.indexOf("HARLEY")>=0){brand="Harley-Davidson";design=n.indexOf("OVAL")>=0?"Oval Logo":"Bar-and-Shield";colors="Orange, black, white";}
-  else if(n.indexOf("GUCCI")>=0||p.sku_code==="IOG-01"||p.sku_code==="EPG-01"){brand="Gucci";design="GG Monogram";colors="Tan and brown";}
-  else if(n.indexOf("USA")>=0||n.indexOf("TEXAS")>=0||n.indexOf("CUBA")>=0){brand="Patriotic";design=n.indexOf("CROWN")>=0?"USA Crown":n.indexOf("WAVE")>=0?"USA Wave":n.indexOf("CUBA")>=0?"Cuba Flag":"USA Flag";colors="Red, white, blue";}
-  else if(n.indexOf("NFL")>=0){brand="NFL";design="NFL Shield";colors="Navy, red, white";}
-  else if(n.indexOf("HOCKEY UTAH")>=0){brand="Utah Hockey Club";design="UHC Logo";colors="Blue and white";}
-  else if(n.indexOf("SUPER BOWL")>=0||n.indexOf("LIX")>=0){brand="Super Bowl LIX";design="SB LIX Design";colors="Gold and Eagles green";}
-  else{brand=cat;design=nm+" Design";colors="Multi-colour";}
-  var app=cat==="Iron-On Patches"?"Application: Iron-On 30-45 sec max heat, cool fully":"Application: Iron-On 30-45 sec, cool. Or sew around edges";
-  return[nm+" — Premium "+(cat||"Patch"),brand?"Brand: "+brand:"","Design: "+design,"Size: "+sz,"Backing: "+backing,colors?"Colors: "+colors:"","Border: Merrowed overlock","Threads: Colorfast",app,"Care: Hand wash only","Origin: "+wh,"Stock: "+stk].filter(Boolean).join(" | ");
-}
 })();
 </script>
 </body></html>
