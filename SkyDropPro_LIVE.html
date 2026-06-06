@@ -14580,7 +14580,7 @@ showCsv && /* @__PURE__ */ import_react.default.createElement("div", { style: { 
       const note = parts.find(p => p.toLowerCase().includes("premium") || p.toLowerCase().includes("quality")) || "";
       const orig = parts.find(p => p.toLowerCase().startsWith("orig")) || "";
       const imgSeg = parts.find(p => p.toLowerCase().startsWith("image:"));
-      const image = imgSeg ? imgSeg.replace(/^image:\s*/i,"").trim() : (skuCode && SKU_IMAGES[skuCode] ? SKU_IMAGES[skuCode] : "");
+      const image = imgSeg ? imgSeg.replace(/^image:\s*/i,"").trim() : (skuCode && (SKU_IMAGES[skuCode] || SKU_IMAGES[skuCode.toUpperCase()] || SKU_IMAGES[Object.keys(SKU_IMAGES).find(k=>k.toLowerCase()===skuCode.toLowerCase())]) ? (SKU_IMAGES[skuCode] || SKU_IMAGES[skuCode.toUpperCase()] || SKU_IMAGES[Object.keys(SKU_IMAGES).find(k=>k.toLowerCase()===skuCode.toLowerCase())]) : "");
       const all = parts.filter(p => !p.toLowerCase().startsWith("image:"));
       return { size, note, orig, image, all };
     }
