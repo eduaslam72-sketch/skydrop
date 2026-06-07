@@ -15768,29 +15768,48 @@ showCsv && /* @__PURE__ */ import_react.default.createElement("div", { style: { 
         return raw ? [{ name: "label.pdf", data: raw }] : [];
       }
     }
-    const [tab, setTab] = (0, import_react.useState)("queue");
+    const [tab, setTab] = (0, import_react.useState)("stock");
+    const [whFilter, setWhFilter] = (0, import_react.useState)("all");
     const [queue, setQueue] = (0, import_react.useState)([]);
     const [shipped, setShipped] = (0, import_react.useState)([]);
     const [delivered, setDelivered] = (0, import_react.useState)([]);
+    const [skus, setSkus] = (0, import_react.useState)([]);
     const [ld, setLd] = (0, import_react.useState)(true);
     (0, import_react.useEffect)(() => {
       (async () => {
         try {
-          const [q, s, d] = await Promise.all([
+          const [q, s, d, sk] = await Promise.all([
             sbFetch("/rest/v1/orders?status=in.(pending,processing)&select=*&order=created_at.asc"),
             sbFetch("/rest/v1/orders?status=eq.shipped&select=*&order=shipped_at.desc"),
-            sbFetch("/rest/v1/orders?status=eq.delivered&select=*&order=shipped_at.desc&limit=50")
+            sbFetch("/rest/v1/orders?status=eq.delivered&select=*&order=shipped_at.desc&limit=50"),
+            sbFetch("/rest/v1/skus?select=*&order=name.asc")
           ]);
           setQueue(q);
           setShipped(s);
           setDelivered(d);
+          setSkus(Array.isArray(sk) ? sk : []);
         } catch (e) {
           toast(e.message, "error");
         }
         setLd(false);
       })();
     }, []);
-    const tabs = [{ id: "queue", label: `\u{1F4EC} Queue (${queue.length})` }, { id: "shipped", label: `\u{1F69A} Shipped (${shipped.length})` }, { id: "delivered", label: `\u2705 Delivered (${delivered.length})` }];
+    // Build warehouse list from SKUs
+    const warehouses = [...new Set(skus.map(function(s2){ return (s2.warehouse || "").trim(); }).filter(Boolean))].sort();
+    // Build sku_code → warehouse lookup for order filtering
+    const skuWhMap = {};
+    skus.forEach(function(s2){ if(s2.sku_code) skuWhMap[s2.sku_code] = (s2.warehouse||"").trim(); });
+    // Filtered data
+    const filtSkus = whFilter === "all" ? skus : skus.filter(function(s2){ return (s2.warehouse||"").toLowerCase().includes(whFilter.toLowerCase()); });
+    const filtQueue = whFilter === "all" ? queue : queue.filter(function(o){ return (skuWhMap[o.sku_code]||"").toLowerCase().includes(whFilter.toLowerCase()); });
+    const filtShipped = whFilter === "all" ? shipped : shipped.filter(function(o){ return (skuWhMap[o.sku_code]||"").toLowerCase().includes(whFilter.toLowerCase()); });
+    const filtDelivered = whFilter === "all" ? delivered : delivered.filter(function(o){ return (skuWhMap[o.sku_code]||"").toLowerCase().includes(whFilter.toLowerCase()); });
+    const tabs = [
+      { id: "stock",     label: "\u{1F4E6} Stock (" + filtSkus.length + ")" },
+      { id: "queue",     label: "\u{1F4EC} Queue (" + filtQueue.length + ")" },
+      { id: "shipped",   label: "\u{1F69A} Shipped (" + filtShipped.length + ")" },
+      { id: "delivered", label: "\u2705 Delivered (" + filtDelivered.length + ")" }
+    ];
     function LabelBtn({ order }) {
       if (!order.shipping_label) return /* @__PURE__ */ import_react.default.createElement("span", { style: { color: "#d97706", fontSize: 11 } }, "\u26A0 No label");
       function dl() {
@@ -15819,24 +15838,102 @@ showCsv && /* @__PURE__ */ import_react.default.createElement("div", { style: { 
       return /* @__PURE__ */ import_react.default.createElement("div", { className: "flex gap-1" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-success btn-xs", onClick: dl }, "\u2B07"), /* @__PURE__ */ import_react.default.createElement("button", { className: "btn btn-primary btn-xs", onClick: pr }, "\u{1F5A8}"));
     }
     const OrderTable = ({ orders, showTracking }) => orders.length === 0 ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "No orders") : /* @__PURE__ */ import_react.default.createElement("div", { className: "table-wrap" }, /* @__PURE__ */ import_react.default.createElement("table", null, /* @__PURE__ */ import_react.default.createElement("thead", null, /* @__PURE__ */ import_react.default.createElement("tr", null, /* @__PURE__ */ import_react.default.createElement("th", null, "Order ID"), /* @__PURE__ */ import_react.default.createElement("th", null, "Dropshipper"), /* @__PURE__ */ import_react.default.createElement("th", null, "Product"), /* @__PURE__ */ import_react.default.createElement("th", null, "Qty"), /* @__PURE__ */ import_react.default.createElement("th", null, "WH Fee"), /* @__PURE__ */ import_react.default.createElement("th", null, "Notes"), /* @__PURE__ */ import_react.default.createElement("th", null, "Label"), showTracking && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("th", null, "Carrier"), /* @__PURE__ */ import_react.default.createElement("th", null, "Tracking"), /* @__PURE__ */ import_react.default.createElement("th", null, "Shipped")), /* @__PURE__ */ import_react.default.createElement("th", null, "Date"))), /* @__PURE__ */ import_react.default.createElement("tbody", null, orders.map((o) => /* @__PURE__ */ import_react.default.createElement("tr", { key: o.id }, /* @__PURE__ */ import_react.default.createElement("td", { style: { fontFamily: "monospace", fontSize: 11 } }, o.order_number || "#" + o.id?.slice(0, 8)), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontWeight: 600 } }, o.dropshipper_name), /* @__PURE__ */ import_react.default.createElement("td", null, o.sku_name, /* @__PURE__ */ import_react.default.createElement("br", null), /* @__PURE__ */ import_react.default.createElement("span", { style: { fontSize: 10, color: "#6b7280" } }, o.sku_code)), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontWeight: 700, textAlign: "center" } }, o.quantity), /* @__PURE__ */ import_react.default.createElement("td", null, "PKR ", ((o.wh_fee || 0) * (o.quantity || 1)).toLocaleString()), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11, maxWidth: 100 } }, o.notes || "\u2014"), /* @__PURE__ */ import_react.default.createElement("td", null, /* @__PURE__ */ import_react.default.createElement(LabelBtn, { order: o })), showTracking && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11 } }, o.carrier || "\u2014"), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontFamily: "monospace", fontSize: 11 } }, o.tracking_number || "\u2014"), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11 } }, o.shipped_at ? new Date(o.shipped_at).toLocaleDateString() : "\u2014")), /* @__PURE__ */ import_react.default.createElement("td", { style: { fontSize: 11 } }, new Date(o.created_at).toLocaleDateString()))))));
-    return /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-grid" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-label" }, "Pending Queue"), /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-value", style: { color: "#d97706" } }, queue.length)), /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-label" }, "In Transit"), /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-value", style: { color: "#2563eb" } }, shipped.length)), /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-label" }, "Delivered"), /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-value", style: { color: "#059669" } }, delivered.length)), /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-label" }, "WH Fee (Queue)"), /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-value" }, "PKR ", queue.reduce((s, o) => s + (o.wh_fee || 0) * (o.quantity || 1), 0).toLocaleString()))), /* @__PURE__ */ import_react.default.createElement("div", { className: "card" }, /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 16, borderBottom: "2px solid #e5e7eb", paddingBottom: 12 } }, tabs.map((t) => /* @__PURE__ */ import_react.default.createElement(
-      "button",
-      {
-        key: t.id,
-        onClick: () => setTab(t.id),
-        style: {
-          padding: "7px 16px",
-          borderRadius: 6,
-          border: "none",
-          cursor: "pointer",
-          fontWeight: 600,
-          fontSize: 13,
-          background: tab === t.id ? "#1e3a8a" : "#f1f5f9",
-          color: tab === t.id ? "#fff" : "#374151"
-        }
-      },
-      t.label
-    ))), ld ? /* @__PURE__ */ import_react.default.createElement("div", { className: "empty" }, "Loading...") : tab === "queue" ? /* @__PURE__ */ import_react.default.createElement(OrderTable, { orders: queue, showTracking: false }) : tab === "shipped" ? /* @__PURE__ */ import_react.default.createElement(OrderTable, { orders: shipped, showTracking: true }) : /* @__PURE__ */ import_react.default.createElement(OrderTable, { orders: delivered, showTracking: true })));
+    return /* @__PURE__ */ import_react.default.createElement("div", null,
+    /* Warehouse selector */
+    /* @__PURE__ */ import_react.default.createElement("div", { style:{display:"flex",gap:8,flexWrap:"wrap",marginBottom:16,alignItems:"center"} },
+      /* @__PURE__ */ import_react.default.createElement("span", { style:{fontSize:12,fontWeight:700,color:"#94a3b8",marginRight:4} }, "🏭 Warehouse:"),
+      /* @__PURE__ */ import_react.default.createElement("button", {
+        onClick:function(){ setWhFilter("all"); },
+        style:{padding:"5px 14px",borderRadius:20,border:"none",cursor:"pointer",fontWeight:700,fontSize:12,
+          background:whFilter==="all"?"linear-gradient(135deg,#0369a1,#0ea5e9)":"rgba(14,165,233,.12)",
+          color:whFilter==="all"?"#fff":"#38bdf8"}
+      }, "🌍 All Warehouses"),
+      warehouses.map(function(wh){
+        var isUSA = wh.toLowerCase().includes("usa") || wh.toLowerCase().includes("ahsan");
+        var isUK  = wh.toLowerCase().includes("uk");
+        var icon  = isUSA ? "🇺🇸" : isUK ? "🇬🇧" : "🏭";
+        var active = whFilter !== "all" && wh.toLowerCase().includes(whFilter.toLowerCase());
+        return /* @__PURE__ */ import_react.default.createElement("button", {
+          key: wh,
+          onClick: function(){ setWhFilter(active ? "all" : wh); },
+          style:{padding:"5px 14px",borderRadius:20,border:"none",cursor:"pointer",fontWeight:700,fontSize:12,
+            background:active?"linear-gradient(135deg,#059669,#10b981)":"rgba(16,185,129,.12)",
+            color:active?"#fff":"#34d399"}
+        }, icon + " " + wh);
+      })
+    ),
+    /* Stats */
+    /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-grid" },
+      /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-card" },
+        /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-label" }, "SKUs in Stock"),
+        /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-value", style:{color:"#0ea5e9"} }, filtSkus.length)),
+      /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-card" },
+        /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-label" }, "Pending Queue"),
+        /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-value", style: { color: "#d97706" } }, filtQueue.length)),
+      /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-card" },
+        /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-label" }, "In Transit"),
+        /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-value", style: { color: "#2563eb" } }, filtShipped.length)),
+      /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-card" },
+        /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-label" }, "WH Fee (Queue)"),
+        /* @__PURE__ */ import_react.default.createElement("div", { className: "stat-value" }, "PKR ",
+          filtQueue.reduce(function(acc,o){ return acc + (o.wh_fee||0)*(o.quantity||1); }, 0).toLocaleString()))
+    ),
+    /* Tabs + content */
+    /* @__PURE__ */ import_react.default.createElement("div", { className: "card" },
+      /* @__PURE__ */ import_react.default.createElement("div", { style:{display:"flex",gap:8,marginBottom:16,borderBottom:"2px solid #1e293b",paddingBottom:12,flexWrap:"wrap"} },
+        tabs.map(function(t){ return /* @__PURE__ */ import_react.default.createElement("button", {
+          key: t.id,
+          onClick: function(){ setTab(t.id); },
+          style:{padding:"7px 16px",borderRadius:6,border:"none",cursor:"pointer",fontWeight:600,fontSize:13,
+            background:tab===t.id?"#1e3a8a":"rgba(30,58,138,.12)",
+            color:tab===t.id?"#fff":"#93c5fd"}
+        }, t.label); })
+      ),
+      ld
+        ? /* @__PURE__ */ import_react.default.createElement("div", { className:"empty" }, "Loading...")
+        : tab === "stock"
+        ? (filtSkus.length === 0
+            ? /* @__PURE__ */ import_react.default.createElement("div", { className:"empty" }, "No products found for this warehouse")
+            : /* @__PURE__ */ import_react.default.createElement("div", { className:"table-wrap" },
+                /* @__PURE__ */ import_react.default.createElement("table", null,
+                  /* @__PURE__ */ import_react.default.createElement("thead", null,
+                    /* @__PURE__ */ import_react.default.createElement("tr", null,
+                      /* @__PURE__ */ import_react.default.createElement("th", null, "SKU Code"),
+                      /* @__PURE__ */ import_react.default.createElement("th", null, "Product Name"),
+                      /* @__PURE__ */ import_react.default.createElement("th", null, "Category"),
+                      /* @__PURE__ */ import_react.default.createElement("th", null, "Stock"),
+                      /* @__PURE__ */ import_react.default.createElement("th", null, "Cost (PKR)"),
+                      /* @__PURE__ */ import_react.default.createElement("th", null, "Retail (PKR)"),
+                      /* @__PURE__ */ import_react.default.createElement("th", null, "WH Fee"),
+                      /* @__PURE__ */ import_react.default.createElement("th", null, "Warehouse")
+                    )
+                  ),
+                  /* @__PURE__ */ import_react.default.createElement("tbody", null,
+                    filtSkus.map(function(s2){
+                      var stockOk = (s2.stock||0) > 10;
+                      var stockLow = (s2.stock||0) > 0 && (s2.stock||0) <= 10;
+                      return /* @__PURE__ */ import_react.default.createElement("tr", { key:s2.id },
+                        /* @__PURE__ */ import_react.default.createElement("td", { style:{fontFamily:"monospace",fontSize:11,color:"#7dd3fc"} }, s2.sku_code),
+                        /* @__PURE__ */ import_react.default.createElement("td", { style:{fontWeight:600} }, s2.name),
+                        /* @__PURE__ */ import_react.default.createElement("td", { style:{fontSize:12,color:"#94a3b8"} }, s2.category||"—"),
+                        /* @__PURE__ */ import_react.default.createElement("td", { style:{fontWeight:700,
+                          color:stockOk?"#34d399":stockLow?"#fbbf24":"#f87171",textAlign:"center"} },
+                          s2.stock||0),
+                        /* @__PURE__ */ import_react.default.createElement("td", null, s2.cost_price ? "PKR " + (+s2.cost_price).toLocaleString() : "—"),
+                        /* @__PURE__ */ import_react.default.createElement("td", null, s2.retail_price ? "PKR " + (+s2.retail_price).toLocaleString() : "—"),
+                        /* @__PURE__ */ import_react.default.createElement("td", null, s2.wh_fee ? "PKR " + s2.wh_fee : "—"),
+                        /* @__PURE__ */ import_react.default.createElement("td", { style:{fontSize:11,color:"#94a3b8"} }, s2.warehouse||"—")
+                      );
+                    })
+                  )
+                )
+              )
+          )
+        : tab === "queue"    ? /* @__PURE__ */ import_react.default.createElement(OrderTable, { orders: filtQueue,     showTracking: false })
+        : tab === "shipped"  ? /* @__PURE__ */ import_react.default.createElement(OrderTable, { orders: filtShipped,   showTracking: true  })
+        :                      /* @__PURE__ */ import_react.default.createElement(OrderTable, { orders: filtDelivered,  showTracking: true  })
+    )
+  );
   }
   function SupplierManagement({ toast }) {
     const [suppliers, setSuppliers] = (0, import_react.useState)([]);
