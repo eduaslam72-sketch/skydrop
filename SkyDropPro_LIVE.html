@@ -15898,12 +15898,13 @@ showCsv && /* @__PURE__ */ import_react.default.createElement("div", { style: { 
                 /* @__PURE__ */ import_react.default.createElement("table", null,
                   /* @__PURE__ */ import_react.default.createElement("thead", null,
                     /* @__PURE__ */ import_react.default.createElement("tr", null,
+                      /* @__PURE__ */ import_react.default.createElement("th", null, "Image"),
                       /* @__PURE__ */ import_react.default.createElement("th", null, "SKU Code"),
-                      /* @__PURE__ */ import_react.default.createElement("th", null, "Product Name"),
-                      /* @__PURE__ */ import_react.default.createElement("th", null, "Category"),
+                      /* @__PURE__ */ import_react.default.createElement("th", null, "Product"),
+                      /* @__PURE__ */ import_react.default.createElement("th", null, "Description"),
                       /* @__PURE__ */ import_react.default.createElement("th", null, "Stock"),
-                      /* @__PURE__ */ import_react.default.createElement("th", null, "Cost (PKR)"),
-                      /* @__PURE__ */ import_react.default.createElement("th", null, "Retail (PKR)"),
+                      /* @__PURE__ */ import_react.default.createElement("th", null, "Cost"),
+                      /* @__PURE__ */ import_react.default.createElement("th", null, "Retail"),
                       /* @__PURE__ */ import_react.default.createElement("th", null, "WH Fee"),
                       /* @__PURE__ */ import_react.default.createElement("th", null, "Warehouse")
                     )
@@ -15912,16 +15913,53 @@ showCsv && /* @__PURE__ */ import_react.default.createElement("div", { style: { 
                     filtSkus.map(function(s2){
                       var stockOk = (s2.stock||0) > 10;
                       var stockLow = (s2.stock||0) > 0 && (s2.stock||0) <= 10;
+                      var pd = parseDesc(s2.description||"", s2.sku_code);
+                      var imgUrl = pd.image || "";
+                      var descLines = pd.all.filter(function(p2){ return p2 && p2.trim(); });
                       return /* @__PURE__ */ import_react.default.createElement("tr", { key:s2.id },
-                        /* @__PURE__ */ import_react.default.createElement("td", { style:{fontFamily:"monospace",fontSize:11,color:"#7dd3fc"} }, s2.sku_code),
-                        /* @__PURE__ */ import_react.default.createElement("td", { style:{fontWeight:600} }, s2.name),
-                        /* @__PURE__ */ import_react.default.createElement("td", { style:{fontSize:12,color:"#94a3b8"} }, s2.category||"—"),
+                        /* Image */
+                        /* @__PURE__ */ import_react.default.createElement("td", { style:{textAlign:"center",padding:"6px 8px"} },
+                          imgUrl
+                            ? /* @__PURE__ */ import_react.default.createElement("img", {
+                                src: imgUrl, alt: s2.name,
+                                style:{width:56,height:56,objectFit:"contain",borderRadius:6,border:"1px solid #334155",background:"#0f172a"},
+                                onError:function(ev2){ ev2.target.style.display="none"; }
+                              })
+                            : /* @__PURE__ */ import_react.default.createElement("div", {
+                                style:{width:56,height:56,borderRadius:6,border:"1px solid #1e293b",background:"#0f172a",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,color:"#334155"}
+                              }, "\uD83D\uDDBC\uFE0F")
+                        ),
+                        /* SKU Code */
+                        /* @__PURE__ */ import_react.default.createElement("td", { style:{fontFamily:"monospace",fontSize:11,color:"#7dd3fc",whiteSpace:"nowrap"} }, s2.sku_code),
+                        /* Product Name + category */
+                        /* @__PURE__ */ import_react.default.createElement("td", { style:{fontWeight:600,minWidth:120} },
+                          s2.name,
+                          /* @__PURE__ */ import_react.default.createElement("div", { style:{fontSize:10,color:"#94a3b8",marginTop:2} }, s2.category||"")
+                        ),
+                        /* Description */
+                        /* @__PURE__ */ import_react.default.createElement("td", { style:{fontSize:11,color:"#cbd5e1",maxWidth:220} },
+                          descLines.length > 0
+                            ? /* @__PURE__ */ import_react.default.createElement("div", null,
+                                descLines.slice(0,5).map(function(line,li){
+                                  return /* @__PURE__ */ import_react.default.createElement("div", { key:li,
+                                    style:{lineHeight:1.5, borderBottom:li<Math.min(descLines.length,5)-1?"1px solid #1e293b":"none", paddingBottom:2, marginBottom:2}
+                                  }, line);
+                                }),
+                                descLines.length > 5 && /* @__PURE__ */ import_react.default.createElement("div", { style:{color:"#475569",fontSize:10,marginTop:2} }, "+" + (descLines.length-5) + " more…")
+                              )
+                            : /* @__PURE__ */ import_react.default.createElement("span", { style:{color:"#334155"} }, "No description")
+                        ),
+                        /* Stock */
                         /* @__PURE__ */ import_react.default.createElement("td", { style:{fontWeight:700,
                           color:stockOk?"#34d399":stockLow?"#fbbf24":"#f87171",textAlign:"center"} },
                           s2.stock||0),
-                        /* @__PURE__ */ import_react.default.createElement("td", null, s2.cost_price ? "PKR " + (+s2.cost_price).toLocaleString() : "—"),
-                        /* @__PURE__ */ import_react.default.createElement("td", null, s2.retail_price ? "PKR " + (+s2.retail_price).toLocaleString() : "—"),
-                        /* @__PURE__ */ import_react.default.createElement("td", null, s2.wh_fee ? "PKR " + s2.wh_fee : "—"),
+                        /* Cost */
+                        /* @__PURE__ */ import_react.default.createElement("td", { style:{whiteSpace:"nowrap"} }, s2.cost_price ? "PKR " + (+s2.cost_price).toLocaleString() : "—"),
+                        /* Retail */
+                        /* @__PURE__ */ import_react.default.createElement("td", { style:{whiteSpace:"nowrap"} }, s2.retail_price ? "PKR " + (+s2.retail_price).toLocaleString() : "—"),
+                        /* WH Fee */
+                        /* @__PURE__ */ import_react.default.createElement("td", { style:{whiteSpace:"nowrap"} }, s2.wh_fee ? "PKR " + s2.wh_fee : "—"),
+                        /* Warehouse */
                         /* @__PURE__ */ import_react.default.createElement("td", { style:{fontSize:11,color:"#94a3b8"} }, s2.warehouse||"—")
                       );
                     })
