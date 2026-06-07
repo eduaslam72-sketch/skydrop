@@ -14335,6 +14335,58 @@ showCsv && /* @__PURE__ */ import_react.default.createElement("div", { style: { 
         )
       )
     ),
+    readOnly && /* @__PURE__ */ import_react.default.createElement("div", null,
+      /* @__PURE__ */ import_react.default.createElement("div", { style:{display:"flex",alignItems:"center",gap:10,marginBottom:16,flexWrap:"wrap"} },
+        /* @__PURE__ */ import_react.default.createElement("h2", { style:{fontSize:16,fontWeight:700,color:"#e2e8f0",margin:0} }, "📦 Product Catalog (", displaySkus.length, " SKUs)")
+      ),
+      /* @__PURE__ */ import_react.default.createElement("div", { className:"table-wrap" },
+        /* @__PURE__ */ import_react.default.createElement("table", null,
+          /* @__PURE__ */ import_react.default.createElement("thead", null,
+            /* @__PURE__ */ import_react.default.createElement("tr", null,
+              /* @__PURE__ */ import_react.default.createElement("th", null, "Image"),
+              /* @__PURE__ */ import_react.default.createElement("th", null, "SKU"),
+              /* @__PURE__ */ import_react.default.createElement("th", null, "Product"),
+              /* @__PURE__ */ import_react.default.createElement("th", null, "Stock"),
+              /* @__PURE__ */ import_react.default.createElement("th", null, "Cost"),
+              /* @__PURE__ */ import_react.default.createElement("th", null, "Retail"),
+              /* @__PURE__ */ import_react.default.createElement("th", null, "Details")
+            )
+          ),
+          /* @__PURE__ */ import_react.default.createElement("tbody", null,
+            displaySkus.length === 0
+              ? /* @__PURE__ */ import_react.default.createElement("tr", null,
+                  /* @__PURE__ */ import_react.default.createElement("td", { colSpan:7, style:{textAlign:"center",padding:32,color:"#64748b"} }, "No products found"))
+              : displaySkus.map(function(s) {
+                  var d2 = parseDesc(s.description || "", s.sku_code);
+                  var imgUrl2 = d2.image || "";
+                  return /* @__PURE__ */ import_react.default.createElement("tr", { key:s.id },
+                    /* @__PURE__ */ import_react.default.createElement("td", null,
+                      imgUrl2
+                        ? /* @__PURE__ */ import_react.default.createElement("img", { src:imgUrl2, alt:s.name, style:{width:48,height:48,objectFit:"cover",borderRadius:6,border:"1px solid #334155"} })
+                        : /* @__PURE__ */ import_react.default.createElement("div", { style:{width:48,height:48,borderRadius:6,border:"1px solid #1e293b",background:"#0f172a",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:"#475569"} }, "🖼️")
+                    ),
+                    /* @__PURE__ */ import_react.default.createElement("td", { style:{fontFamily:"monospace",fontSize:12,color:"#7dd3fc"} }, s.sku_code),
+                    /* @__PURE__ */ import_react.default.createElement("td", null,
+                      /* @__PURE__ */ import_react.default.createElement("div", { style:{fontWeight:600,color:"#e2e8f0"} }, s.name),
+                      s.category && /* @__PURE__ */ import_react.default.createElement("div", { style:{fontSize:11,color:"#64748b",marginTop:2} }, s.category)
+                    ),
+                    /* @__PURE__ */ import_react.default.createElement("td", null,
+                      /* @__PURE__ */ import_react.default.createElement("span", { style:{fontWeight:700,color:(s.stock||0)>10?"#10b981":(s.stock||0)>0?"#f59e0b":"#ef4444"} }, s.stock || 0)
+                    ),
+                    /* @__PURE__ */ import_react.default.createElement("td", { style:{fontFamily:"monospace",fontSize:13} }, "PKR ", (s.cost_price||0).toLocaleString()),
+                    /* @__PURE__ */ import_react.default.createElement("td", { style:{fontFamily:"monospace",fontSize:13,color:"#10b981",fontWeight:700} }, "PKR ", (s.retail_price||0).toLocaleString()),
+                    /* @__PURE__ */ import_react.default.createElement("td", null,
+                      /* @__PURE__ */ import_react.default.createElement("button", {
+                        style:{background:"rgba(14,165,233,.15)",color:"#38bdf8",border:"1px solid #0ea5e9",borderRadius:6,padding:"4px 10px",fontSize:11,fontWeight:700,cursor:"pointer"},
+                        onClick: function(){ var d3=parseDesc(s.description||"",s.sku_code); setAdminViewSku(s); setEditDesc(d3.all.join(" | ")); setEditImg(d3.image||""); }
+                      }, "👁️ Details")
+                    )
+                  );
+                })
+          )
+        )
+      )
+    ),
     !readOnly && /* @__PURE__ */ import_react.default.createElement("div", { className: "section-header" },
       /* @__PURE__ */ import_react.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
         /* @__PURE__ */ import_react.default.createElement("h2", { style: { fontSize: 16, fontWeight: 700, color: "#1e3a5f" } }, regionFlag, " ", region ? region + " Stock" : "All Inventory", " (", displaySkus.length, " SKUs)"),
