@@ -14186,7 +14186,39 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
 
       /* description editor */
       /* @__PURE__ */ import_react.default.createElement("div", null,
-        /* @__PURE__ */ import_react.default.createElement("label", { style:{fontSize:11,fontWeight:700,color:"#38bdf8",textTransform:"uppercase",letterSpacing:0.8,display:"block",marginBottom:8} }, "📝 Product Description"),
+        /* header row: label + action buttons */
+        /* @__PURE__ */ import_react.default.createElement("div", { style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8} },
+          /* @__PURE__ */ import_react.default.createElement("label", { style:{fontSize:11,fontWeight:700,color:"#38bdf8",textTransform:"uppercase",letterSpacing:0.8} }, "📝 Product Description"),
+          /* @__PURE__ */ import_react.default.createElement("div", { style:{display:"flex",gap:6} },
+            /* Download description as .txt - show when there is content */
+            editDesc.trim() && /* @__PURE__ */ import_react.default.createElement("a", {
+              href: "data:text/plain;charset=utf-8," + encodeURIComponent(editDesc),
+              download: (adminViewSku.sku_code || "description") + "_desc.txt",
+              style:{background:"linear-gradient(135deg,#059669,#10b981)",color:"#fff",borderRadius:6,padding:"4px 10px",fontSize:11,fontWeight:700,cursor:"pointer",textDecoration:"none",display:"inline-flex",alignItems:"center",gap:4}
+            }, "⬇️ Download"),
+            /* Import .txt file into description - admin only */
+            !readOnly && /* @__PURE__ */ import_react.default.createElement("label", {
+              htmlFor: "desc-upload-" + adminViewSku.id,
+              style:{background:"rgba(14,165,233,.15)",color:"#38bdf8",border:"1px solid #0ea5e9",borderRadius:6,padding:"4px 10px",fontSize:11,fontWeight:700,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:4}
+            },
+              "📄 Import .txt",
+              /* @__PURE__ */ import_react.default.createElement("input", {
+                id: "desc-upload-" + adminViewSku.id,
+                type: "file",
+                accept: ".txt,text/plain",
+                style:{display:"none"},
+                onChange: function(ev2){
+                  var file2 = ev2.target.files[0];
+                  if (!file2) return;
+                  var rdr = new FileReader();
+                  rdr.onload = function(re2){ setEditDesc(re2.target.result); };
+                  rdr.readAsText(file2, "utf-8");
+                  ev2.target.value = "";
+                }
+              })
+            )
+          )
+        ),
         /* @__PURE__ */ import_react.default.createElement("textarea", {
           value: editDesc,
           onChange: function(e2){ if (!readOnly) setEditDesc(e2.target.value); },
