@@ -13200,6 +13200,7 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
     ],
     dropshipper: [
       { id: "dashboard",      icon: "\u{1F3E0}", label: "New Order" },
+      { id: "catalog",        icon: "\u{1F4F8}", label: "Product Catalog" },
       { id: "my_orders",     icon: "\u{1F4E6}", label: "My Orders" },
       { id: "invoices",      icon: "\u{1F9FE}", label: "Invoices" },
       { id: "monthly_report",icon: "\u{1F4C5}", label: "Monthly Closing" },
@@ -13208,6 +13209,7 @@ body.light-mode .sku-card{background:#ffffff !important;border-color:#e2e8f0 !im
       { id: "feedback",      icon: "\u2B50",    label: "Feedback" }
     ],
     warehouse: [
+      { id: "catalog",   icon: "\u{1F4F8}", label: "Product Catalog" },
       { id: "queue",     icon: "\u{1F4EC}", label: "Order Queue" },
       { id: "shipped",   icon: "\u{1F69A}", label: "Shipped" },
       { id: "wh_report", icon: "\u{1F4CA}", label: "WH Report" },
@@ -14897,7 +14899,7 @@ showCsv && /* @__PURE__ */ import_react.default.createElement("div", { style: { 
                     })
                   )
                 )
-              : /* @__PURE__ */ import_react.default.user.role === "admin"
+              : user.role === "admin"
               ? /* @__PURE__ */ import_react.default.createElement("label", {
                   htmlFor: "modal-img-upload",
                   style:{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8,cursor:"pointer",width:"100%",height:"100%",borderRadius:12,border:"2px dashed #0ea5e9",background:"rgba(14,165,233,.06)"},
@@ -16587,6 +16589,7 @@ showCsv && /* @__PURE__ */ import_react.default.createElement("div", { style: { 
       }
       if (r === "dropshipper") {
         if (page === "dashboard") return /* @__PURE__ */ import_react.default.createElement(DropshipperDashboard, { user, toast: addToast });
+        if (page === "catalog") return /* @__PURE__ */ import_react.default.createElement(AdminInventory, { toast: addToast, readOnly: true });
         if (page === "my_orders") return /* @__PURE__ */ import_react.default.createElement(DropshipperOrders, { user, toast: addToast });
         if (page === "invoices") return /* @__PURE__ */ import_react.default.createElement(DropshipperInvoices, { user, toast: addToast });
         if (page === "monthly_report") return /* @__PURE__ */ import_react.default.createElement(MonthlyReport, { user, toast: addToast });
@@ -16595,6 +16598,7 @@ showCsv && /* @__PURE__ */ import_react.default.createElement("div", { style: { 
         if (page === "disputes") return /* @__PURE__ */ import_react.default.createElement(Disputes, { user, role: "dropshipper", toast: addToast });
       }
       if (r === "warehouse") {
+        if (page === "catalog") return /* @__PURE__ */ import_react.default.createElement(AdminInventory, { toast: addToast, readOnly: true });
         if (page === "queue") return /* @__PURE__ */ import_react.default.createElement(WarehouseQueue, { toast: addToast });
         if (page === "shipped") return /* @__PURE__ */ import_react.default.createElement(WarehouseShipped, { toast: addToast });
         if (page === "wh_report") return /* @__PURE__ */ import_react.default.createElement(WarehouseReport, { toast: addToast });
